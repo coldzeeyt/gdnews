@@ -1,14 +1,18 @@
+import { cached } from "./cache.js";
+
 const API_BASE = "https://pointercrate.com/api/v2";
 const PAGE_SIZE = 100;
+const ALL_DEMONS_TTL_MS = 30 * 60 * 1000;
 
 /**
  * Pointercrate's demon list is paginated by internal `id`, not by list
  * `position` - there's no server-side filter/sort for position, so the
- * only way to find the current top 10 is to page through every demon and
- * sort by position ourselves. ~700 demons / 100 per page is ~8 requests,
- * fine for a job that's cached for 30 minutes.
+ * only way to find the current top 10 (or check whether a given level has
+ * been placed at all) is to page through every demon ourselves. ~700
+ * demons / 100 per page is ~8 requests; cached so both the demonlist and
+ * the upcoming-demons watchlist can share one fetch.
  */
-async function fetchAllDemons() {
+async function fetchAllDemonsUncached() {
   const all = [];
   let after = 0;
 
@@ -38,8 +42,12 @@ async function fetchAllDemons() {
   return all;
 }
 
+export function fetchAllDemonsCached() {
+  return cached("pointercrate:all", ALL_DEMONS_TTL_MS, fetchAllDemonsUncached);
+}
+
 export async function fetchTop10Demons() {
-  const demons = await fetchAllDemons();
+  const demons = await fetchAllDemonsCached();
 
   return demons
     .sort((a, b) => a.position - b.position)
@@ -53,6 +61,12 @@ export async function fetchTop10Demons() {
       levelId: d.level_id ?? null,
       thumbnail: d.thumbnail ?? (d.video ? youtubeThumbFromUrl(d.video) : null),
     }));
+}
+
+export async function isDemonPlaced(name) {
+  const demons = await fetchAllDemonsCached();
+  const target = name.trim().toLowerCase();
+  return demons.some((d) => d.name.trim().toLowerCase() === target);
 }
 
 function youtubeThumbFromUrl(url) {

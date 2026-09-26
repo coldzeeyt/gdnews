@@ -3,9 +3,12 @@ import Layout from "./components/Layout.jsx";
 import Home from "./pages/Home.jsx";
 import Live from "./pages/Live.jsx";
 import Demonlist from "./pages/Demonlist.jsx";
+import PatchNotes from "./pages/PatchNotes.jsx";
+import DailyWeekly from "./pages/DailyWeekly.jsx";
 import Updates from "./pages/Updates.jsx";
 import Leaks from "./pages/Leaks.jsx";
 import Upcoming from "./pages/Upcoming.jsx";
+import Furry from "./pages/Furry.jsx";
 
 export default function App() {
   return (
@@ -14,9 +17,12 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="live" element={<Live />} />
         <Route path="demonlist" element={<Demonlist />} />
+        <Route path="patch-notes" element={<PatchNotes />} />
+        <Route path="daily" element={<DailyWeekly />} />
         <Route path="updates" element={<Updates />} />
         <Route path="leaks" element={<Leaks />} />
         <Route path="upcoming" element={<Upcoming />} />
+        <Route path="is-colon-a-furry" element={<Furry />} />
       </Route>
     </Routes>
   );

@@ -4,12 +4,15 @@ import SectionHeader from "../components/SectionHeader.jsx";
 import ArticleCard from "../components/ArticleCard.jsx";
 import LiveCard from "../components/LiveCard.jsx";
 import DemonRow from "../components/DemonRow.jsx";
+import PatchNoteRow from "../components/PatchNoteRow.jsx";
+import LevelCard from "../components/LevelCard.jsx";
+import GriefProgressCard from "../components/GriefProgressCard.jsx";
 import { LoadingBanner, ErrorBanner, EmptyState } from "../components/StateBanner.jsx";
 
 function SeeAll({ to }) {
   return (
-    <Link to={to} className="text-sm font-medium text-accent-cyan hover:text-accent-purple transition-colors">
-      See all →
+    <Link to={to} className="text-xs font-semibold uppercase tracking-wide text-signal-amber hover:text-white">
+      See all
     </Link>
   );
 }
@@ -18,31 +21,22 @@ export default function Home() {
   const live = useApi("/api/live", { pollMs: 120000 });
   const demonlist = useApi("/api/demonlist/top10", { pollMs: 30 * 60000 });
   const feed = useApi("/api/feed", { pollMs: 10 * 60000 });
-
-  const liveNow = live.data?.creators.filter((c) => c.live) ?? [];
+  const patchNotes = useApi("/api/patch-notes");
+  const daily = useApi("/api/daily", { pollMs: 15 * 60000 });
 
   return (
-    <div className="space-y-14">
-      <section className="text-center py-10 sm:py-16">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-accent-purple mb-3">
-          Your Geometry Dash pulse
-        </p>
-        <h1 className="font-display text-4xl sm:text-6xl font-extrabold text-white tracking-tight">
-          Everything <span className="gradient-text">GD</span>, in one feed
+    <div className="space-y-10">
+      <div className="flex items-baseline justify-between border-b border-white/10 pb-3">
+        <h1 className="font-display text-2xl font-semibold text-white uppercase tracking-wide">
+          Overview
         </h1>
-        <p className="text-slate-400 mt-4 max-w-xl mx-auto">
-          Live creators, the top 10 demonlist, fresh updates, leaks and hype — updated
-          around the clock.
-        </p>
-      </section>
+        <p className="text-xs text-slate-500">Live creators, demonlist, updates & leaks</p>
+      </div>
+
+      <GriefProgressCard />
 
       <section>
-        <SectionHeader
-          eyebrow="Right now"
-          title="Live creators"
-          description="Doggie, Zoink, Conix and friends — see who's streaming."
-          action={<SeeAll to="/live" />}
-        />
+        <SectionHeader eyebrow="Right now" title="Live creators" action={<SeeAll to="/live" />} />
         {live.loading && !live.data && <LoadingBanner label="Checking who's live…" />}
         {live.error && !live.data && <ErrorBanner />}
         {live.data && (
@@ -52,18 +46,10 @@ export default function Home() {
             ))}
           </div>
         )}
-        {liveNow.length === 0 && live.data && (
-          <p className="text-xs text-slate-500 mt-3">No one's live right now — check back soon.</p>
-        )}
       </section>
 
       <section>
-        <SectionHeader
-          eyebrow="Pointercrate"
-          title="Top 10 demonlist"
-          description="The current hardest rated levels in the game."
-          action={<SeeAll to="/demonlist" />}
-        />
+        <SectionHeader eyebrow="Pointercrate" title="Top 10 demonlist" action={<SeeAll to="/demonlist" />} />
         {demonlist.loading && !demonlist.data && <LoadingBanner label="Loading demonlist…" />}
         {demonlist.error && !demonlist.data && <ErrorBanner />}
         {demonlist.data && (
@@ -75,31 +61,31 @@ export default function Home() {
         )}
       </section>
 
-      <div className="grid lg:grid-cols-3 gap-10">
-        <FeedPreview
-          eyebrow="Patch notes"
-          title="Latest updates"
-          to="/updates"
-          posts={feed.data?.news}
-          loading={feed.loading}
-          error={feed.error}
-        />
-        <FeedPreview
-          eyebrow="Rumor mill"
-          title="Fresh leaks"
-          to="/leaks"
-          posts={feed.data?.leaks}
-          loading={feed.loading}
-          error={feed.error}
-        />
-        <FeedPreview
-          eyebrow="Coming soon"
-          title="Upcoming & hype"
-          to="/upcoming"
-          posts={feed.data?.upcoming}
-          loading={feed.loading}
-          error={feed.error}
-        />
+      <div className="grid lg:grid-cols-2 gap-8">
+        <section>
+          <SectionHeader eyebrow="Rate-a-day" title="Daily & weekly" action={<SeeAll to="/daily" />} />
+          {daily.loading && !daily.data && <LoadingBanner />}
+          {daily.error && !daily.data && <ErrorBanner />}
+          {daily.data && (
+            <div className="grid sm:grid-cols-2 gap-3">
+              <LevelCard label="Daily" level={daily.data.daily} />
+              <LevelCard label="Weekly" level={daily.data.weekly} />
+            </div>
+          )}
+        </section>
+
+        <section>
+          <SectionHeader eyebrow="Version history" title="Latest patch" action={<SeeAll to="/patch-notes" />} />
+          {patchNotes.loading && !patchNotes.data && <LoadingBanner />}
+          {patchNotes.error && !patchNotes.data && <ErrorBanner />}
+          {patchNotes.data && <PatchNoteRow entry={patchNotes.data.entries[0]} />}
+        </section>
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-8">
+        <FeedPreview eyebrow="Patch notes" title="Updates" to="/updates" posts={feed.data?.news} loading={feed.loading} error={feed.error} />
+        <FeedPreview eyebrow="Rumor mill" title="Leaks" to="/leaks" posts={feed.data?.leaks} loading={feed.loading} error={feed.error} />
+        <FeedPreview eyebrow="Coming soon" title="Upcoming" to="/upcoming" posts={feed.data?.upcoming} loading={feed.loading} error={feed.error} />
       </div>
     </div>
   );

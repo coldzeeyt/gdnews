@@ -9,6 +9,10 @@ import { existsSync } from "node:fs";
 import demonlistRouter from "./routes/demonlist.js";
 import feedRouter from "./routes/feed.js";
 import liveRouter from "./routes/live.js";
+import patchNotesRouter from "./routes/patchNotes.js";
+import watchlistRouter from "./routes/watchlist.js";
+import dailyRouter from "./routes/daily.js";
+import progressRouter from "./routes/progress.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CLIENT_DIST = path.join(__dirname, "../client/dist");
@@ -30,6 +34,10 @@ app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/demonlist", demonlistRouter);
 app.use("/api/feed", feedRouter);
 app.use("/api/live", liveRouter);
+app.use("/api/patch-notes", patchNotesRouter);
+app.use("/api/watchlist", watchlistRouter);
+app.use("/api/daily", dailyRouter);
+app.use("/api/progress", progressRouter);
 
 app.use(express.static(CLIENT_DIST, { maxAge: "1h", index: false }));
 app.get("*", (req, res, next) => {

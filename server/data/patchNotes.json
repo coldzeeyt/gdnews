@@ -1,0 +1,122 @@
+[
+  {
+    "version": "2.21",
+    "status": "upcoming",
+    "date": null,
+    "title": "Delayed 2.2 features",
+    "highlights": [
+      "Explorers, a new Demon-rated main level",
+      "The Map: user-created platformer levels, Demon Towers, unlockable rewards",
+      "Versus mode and custom keybinds"
+    ]
+  },
+  {
+    "version": "2.209",
+    "status": "upcoming",
+    "date": null,
+    "title": "Quality-of-life update",
+    "highlights": [
+      "Group chats and comment emojis",
+      "Progress tracker and a revamped options menu",
+      "Platformer checkpoint saving, level import/export"
+    ]
+  },
+  {
+    "version": "2.2",
+    "status": "released",
+    "date": "2023-12-19",
+    "title": "Dash",
+    "highlights": [
+      "New main level Dash and the Swing gamemode",
+      "Platformer mode with free movement, plus The Tower",
+      "Mechanic & Diamond shops, second shard tier, Lists"
+    ]
+  },
+  {
+    "version": "2.1",
+    "status": "released",
+    "date": "2017-01-16",
+    "title": "Fingerdash",
+    "highlights": [
+      "New main level Fingerdash and the Spider gamemode",
+      "Shards, five demon difficulty tiers, Gauntlets, Hall of Fame",
+      "Daily Levels, Quests, vault keys and diamonds"
+    ]
+  },
+  {
+    "version": "2.0",
+    "status": "released",
+    "date": "2015-08-26",
+    "title": "Geometrical Dominator",
+    "highlights": [
+      "New levels Geometrical Dominator and Deadlocked",
+      "Robot gamemode, moving objects, toggle/alpha/pulse/spawn triggers",
+      "User coins, secret vault, friends and messaging"
+    ]
+  },
+  {
+    "version": "1.9",
+    "status": "released",
+    "date": "2014-11-09",
+    "title": "Blast Processing",
+    "highlights": [
+      "New levels Blast Processing and Theory of Everything 2",
+      "Wave gamemode and custom Newgrounds songs for user levels",
+      "New account system and cloud save backups"
+    ]
+  },
+  {
+    "version": "1.8",
+    "status": "released",
+    "date": "2014-08-07",
+    "title": "Hexagon Force",
+    "highlights": [
+      "New level Hexagon Force",
+      "Dual mode and two-player level support",
+      "Major editor upgrades: in-editor playtest, free move, flip/rotate groups"
+    ]
+  },
+  {
+    "version": "1.7",
+    "status": "released",
+    "date": "2014-05-21",
+    "title": "Electrodynamix",
+    "highlights": [
+      "New level Electrodynamix",
+      "Speed mode, glow effect and rainbow trail",
+      "New search filters and remix/copy permissions for levels"
+    ]
+  },
+  {
+    "version": "1.6",
+    "status": "released",
+    "date": "2014-03-25",
+    "title": "Electroman Adventures & Clubstep",
+    "highlights": [
+      "First Demon-rated level, Clubstep",
+      "New level Electroman Adventures with destructible blocks",
+      "Map Packs, Auto difficulty tier, and secret coins on every level"
+    ]
+  },
+  {
+    "version": "1.5",
+    "status": "released",
+    "date": "2014-01-30",
+    "title": "Theory of Everything",
+    "highlights": [
+      "New level Theory of Everything and the UFO gamemode",
+      "Community voting on stars and Demon difficulty",
+      "Copy/paste support in the level editor"
+    ]
+  },
+  {
+    "version": "1.0",
+    "status": "released",
+    "date": "2013-08-13",
+    "title": "Initial release",
+    "highlights": [
+      "Launched on iOS and Android with the first main levels",
+      "Core cube gameplay, practice mode and the level editor"
+    ]
+  }
+]

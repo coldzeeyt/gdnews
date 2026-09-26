@@ -5,25 +5,23 @@ import { LoadingBanner, ErrorBanner } from "../components/StateBanner.jsx";
 
 export default function Live() {
   const live = useApi("/api/live", { pollMs: 120000 });
-  const configured = live.data?.configured;
-  const noPlatformsConfigured = configured && !configured.twitch && !configured.youtube;
+  const notConfigured = live.data?.configured && !live.data.configured.youtube;
 
   return (
     <div>
       <SectionHeader
         eyebrow="Right now"
         title="Live creators"
-        description="Twitch and YouTube status for the GD creators you follow, refreshed every couple of minutes."
+        description="YouTube live status for the GD creators you follow, refreshed every couple of minutes."
       />
 
       {live.loading && !live.data && <LoadingBanner label="Checking who's live…" />}
       {live.error && !live.data && <ErrorBanner />}
 
-      {noPlatformsConfigured && (
-        <div className="card p-4 mb-6 text-sm text-accent-orange border-accent-orange/20">
-          Live status isn't configured yet. Set <code className="text-xs">TWITCH_CLIENT_ID</code> /{" "}
-          <code className="text-xs">TWITCH_CLIENT_SECRET</code> and/or{" "}
-          <code className="text-xs">YOUTUBE_API_KEY</code> on the server to enable this.
+      {notConfigured && (
+        <div className="card p-4 mb-6 text-sm text-signal-amber border-signal-amber/30">
+          Live status isn't configured yet. Set <code className="text-xs">YOUTUBE_API_KEY</code> on
+          the server to enable this.
         </div>
       )}
 

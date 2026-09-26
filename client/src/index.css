@@ -7,20 +7,15 @@ html {
 }
 
 body {
-  @apply bg-base-950 text-slate-200 font-sans antialiased;
-  background-image: var(--tw-gd-glow, none);
+  @apply bg-ink-950 text-slate-300 font-sans antialiased;
 }
 
 ::selection {
-  @apply bg-accent-purple/40 text-white;
+  @apply bg-signal-amber/30 text-white;
 }
 
 .card {
-  @apply bg-base-900/80 border border-white/5 rounded-2xl backdrop-blur-sm;
-}
-
-.gradient-text {
-  @apply bg-gd-gradient bg-clip-text text-transparent;
+  @apply bg-ink-900 border border-white/10;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -28,5 +23,5 @@ body {
   height: 8px;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  @apply bg-base-600 rounded-full;
+  @apply bg-ink-600;
 }

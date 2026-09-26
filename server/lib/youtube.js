@@ -7,23 +7,30 @@ const API_BASE = "https://www.googleapis.com/youtube/v3";
 // so keep this TTL generous - override with YOUTUBE_LIVE_TTL_MINUTES if you
 // have extra quota to spend on tighter polling.
 const LIVE_TTL_MS = (Number(process.env.YOUTUBE_LIVE_TTL_MINUTES) || 10) * 60 * 1000;
-const CHANNEL_ID_TTL_MS = 48 * 60 * 60 * 1000;
+const CHANNEL_TTL_MS = 48 * 60 * 60 * 1000;
 
 export function isYoutubeConfigured() {
   return Boolean(process.env.YOUTUBE_API_KEY);
 }
 
-async function resolveChannelId(handle) {
-  return cached(`youtube:handle:${handle}`, CHANNEL_ID_TTL_MS, async () => {
+async function resolveChannel(handle) {
+  return cached(`youtube:channel:${handle}`, CHANNEL_TTL_MS, async () => {
     const qs = new URLSearchParams({
-      part: "id",
+      part: "snippet",
       forHandle: handle.replace(/^@/, ""),
       key: process.env.YOUTUBE_API_KEY,
     });
     const res = await fetch(`${API_BASE}/channels?${qs}`);
     if (!res.ok) throw new Error(`youtube channels.list responded ${res.status}`);
     const json = await res.json();
-    return json.items?.[0]?.id ?? null;
+    const item = json.items?.[0];
+    if (!item) return null;
+
+    return {
+      channelId: item.id,
+      title: item.snippet.title,
+      avatarUrl: item.snippet.thumbnails?.medium?.url ?? item.snippet.thumbnails?.default?.url ?? null,
+    };
   });
 }
 
@@ -65,20 +72,22 @@ export async function fetchYoutubeStatuses(creators) {
   const result = new Map();
   await Promise.all(
     handles.map(async (handle) => {
+      const channelUrl = `https://youtube.com/${handle}`;
       try {
-        const channelId = await resolveChannelId(handle);
-        if (!channelId) {
-          result.set(handle, { live: false, channelUrl: `https://youtube.com/${handle}` });
+        const channel = await resolveChannel(handle);
+        if (!channel) {
+          result.set(handle, { live: false, channelUrl });
           return;
         }
-        const status = await checkChannelLive(channelId);
+        const status = await checkChannelLive(channel.channelId);
         result.set(handle, {
           ...status,
-          channelUrl: `https://youtube.com/${handle}`,
+          avatarUrl: channel.avatarUrl,
+          channelUrl,
           watchUrl: status.videoId ? `https://youtube.com/watch?v=${status.videoId}` : null,
         });
       } catch {
-        result.set(handle, { live: false, channelUrl: `https://youtube.com/${handle}` });
+        result.set(handle, { live: false, channelUrl });
       }
     })
   );

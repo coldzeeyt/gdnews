@@ -1,0 +1,10 @@
+{
+  "creator": "Doggie",
+  "level": "Grief",
+  "best": { "percent": 97, "note": "97% (x2)" },
+  "attempts": [
+    { "percent": 97, "note": "97% - x2" },
+    { "percent": 91, "note": "91%" }
+  ],
+  "updatedAt": null
+}

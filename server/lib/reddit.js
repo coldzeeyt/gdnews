@@ -6,7 +6,7 @@ import { cached } from "./cache.js";
 // its client id/secret for a token via the standard client_credentials
 // grant, no user login required, and reads public listings through
 // oauth.reddit.com like a normal API client instead of scraping HTML.
-const USER_AGENT = "web:gdnews:1.0 (by /u/gdwire_app)";
+const USER_AGENT = "web:gdnews:1.0 (by /u/gdnews_app)";
 const SUBREDDIT = "geometrydash";
 const TOKEN_URL = "https://www.reddit.com/api/v1/access_token";
 const API_BASE = "https://oauth.reddit.com";

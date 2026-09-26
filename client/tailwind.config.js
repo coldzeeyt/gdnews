@@ -4,31 +4,25 @@ export default {
   theme: {
     extend: {
       colors: {
-        base: {
-          950: "#06070d",
-          900: "#0b0e17",
-          800: "#121728",
-          700: "#1b2138",
-          600: "#262e4a",
+        ink: {
+          950: "#0a0b0d",
+          900: "#111317",
+          800: "#191c22",
+          700: "#23262e",
+          600: "#31353f",
+          500: "#4a4f5c",
         },
-        accent: {
-          cyan: "#34e0ff",
-          purple: "#9b5cff",
-          pink: "#ff4fd8",
-          orange: "#ff8a3d",
+        signal: {
+          amber: "#e8a33d",
+          red: "#d64545",
+          blue: "#3d8be8",
+          green: "#4caf6e",
         },
       },
       fontFamily: {
-        display: ["'Rubik'", "system-ui", "sans-serif"],
+        display: ["'Barlow Condensed'", "system-ui", "sans-serif"],
         sans: ["'Inter'", "system-ui", "sans-serif"],
-      },
-      backgroundImage: {
-        "gd-glow":
-          "radial-gradient(circle at 20% -10%, rgba(155,92,255,0.35), transparent 45%), radial-gradient(circle at 90% 0%, rgba(52,224,255,0.25), transparent 40%)",
-        "gd-gradient": "linear-gradient(90deg, #34e0ff, #9b5cff 50%, #ff4fd8)",
-      },
-      boxShadow: {
-        glow: "0 0 0 1px rgba(155,92,255,0.25), 0 8px 30px -8px rgba(155,92,255,0.35)",
+        mono: ["'IBM Plex Mono'", "ui-monospace", "monospace"],
       },
     },
   },

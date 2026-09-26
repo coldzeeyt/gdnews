@@ -14,7 +14,7 @@ export default function FeedPage({ eyebrow, title, description, dataKey }) {
       {feed.loading && !posts && <LoadingBanner />}
       {feed.error && !posts && <ErrorBanner />}
       {feed.data && feed.data.configured === false && (
-        <div className="card p-4 mb-6 text-sm text-accent-orange border-accent-orange/20">
+        <div className="card p-4 mb-6 text-sm text-signal-amber border-signal-amber/30">
           This feed isn't configured yet. Set <code className="text-xs">REDDIT_CLIENT_ID</code> and{" "}
           <code className="text-xs">REDDIT_CLIENT_SECRET</code> on the server to enable it.
         </div>
