@@ -5,7 +5,8 @@ export default function Leaks() {
     <FeedPage
       eyebrow="Rumor mill"
       title="Leaks"
-      description="Unreleased content, datamines and things that weren't supposed to be public yet."
+      description="Unreleased or datamined content the community has spotted. Curated by hand, since there's no clean public API for this."
+      url="/api/leaks"
       dataKey="leaks"
     />
   );

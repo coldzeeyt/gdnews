@@ -21,7 +21,8 @@ function SeeAll({ to }) {
 export default function Home() {
   const live = useApi("/api/live", { pollMs: 120000 });
   const demonlist = useApi("/api/demonlist/top10", { pollMs: 30 * 60000 });
-  const feed = useApi("/api/feed", { pollMs: 10 * 60000 });
+  const feed = useApi("/api/feed", { pollMs: 15 * 60000 });
+  const leaks = useApi("/api/leaks");
   const patchNotes = useApi("/api/patch-notes");
   const daily = useApi("/api/daily", { pollMs: 15 * 60000 });
 
@@ -84,9 +85,9 @@ export default function Home() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
-        <FeedPreview eyebrow="Patch notes" title="Updates" to="/updates" posts={feed.data?.news} loading={feed.loading} error={feed.error} />
-        <FeedPreview eyebrow="Rumor mill" title="Leaks" to="/leaks" posts={feed.data?.leaks} loading={feed.loading} error={feed.error} />
-        <FeedPreview eyebrow="Coming soon" title="Upcoming" to="/upcoming" posts={feed.data?.upcoming} loading={feed.loading} error={feed.error} />
+        <FeedPreview eyebrow="Steam news" title="Updates" to="/updates" posts={feed.data?.updates} loading={feed.loading} error={feed.error} />
+        <FeedPreview eyebrow="Rumor mill" title="Leaks" to="/leaks" posts={leaks.data?.leaks} loading={leaks.loading} error={leaks.error} />
+        <FeedPreview eyebrow="Coming soon" title="Upcoming" to="/upcoming" posts={feed.data?.hype} loading={feed.loading} error={feed.error} />
       </div>
     </div>
   );
@@ -101,7 +102,7 @@ function FeedPreview({ eyebrow, title, to, posts, loading, error }) {
         {error && !posts && <ErrorBanner />}
         {posts?.length === 0 && <EmptyState />}
         {posts?.slice(0, 3).map((post) => (
-          <ArticleCard key={post.id} post={post} compact />
+          <ArticleCard key={post.id ?? post.url} post={post} compact />
         ))}
       </div>
     </section>

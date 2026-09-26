@@ -6,12 +6,14 @@ A small full-stack app that pulls together:
 - **Demonlist** — the current Pointercrate top 10 hardest demons
 - **Patch notes** — curated Geometry Dash version history, released and upcoming
 - **Daily/Weekly** — the current daily level and weekly demon (via GDBrowser)
-- **Updates / Leaks / Upcoming** — sourced from r/geometrydash, auto-categorized by flair + keywords
-- An **upcoming-demons watchlist** on the Upcoming page — hyped extreme demons not yet on the list, which drop off automatically once they get placed
+- **Updates** — official RobTop announcements from Geometry Dash's Steam news feed
+- **Leaks** — a hand-curated, self-maintained list (no public API exists for this)
+- **Upcoming** — an extreme-demon watchlist (auto-drops entries once verified) plus event/contest previews from Steam news
 - A **progress tracker** on the home page for a creator working on a specific level (manually updated - there's no API for stream attempt counts)
 
-Every section works independently — if you haven't set up a given API key
-yet, that section just says so instead of breaking the rest of the site.
+Everything except live status works with **zero configuration** - no API
+keys, no accounts to register. Live status is the one opt-in feature, and
+even without it the rest of the site works fine.
 
 ## Stack
 
@@ -38,15 +40,14 @@ npm run build   # builds client/dist
 npm start       # serves API + built client on :3000
 ```
 
-## Configuration (all optional — see `.env.example`)
+## Configuration (optional — see `.env.example`)
 
 | Feature | Env vars | Where to get them |
 |---|---|---|
 | Live status | `YOUTUBE_API_KEY` | [Google Cloud Console](https://console.cloud.google.com/) — enable "YouTube Data API v3", create an API key |
-| Updates/Leaks/Upcoming | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` | [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps) — "create app", type **script** |
 
-Demonlist (Pointercrate) and Daily/Weekly (GDBrowser) need no keys — both are
-public APIs.
+Everything else (Pointercrate, Steam news, GDBrowser) is a public, keyless
+API — nothing to sign up for.
 
 Copy `.env.example` to `.env` for local dev and run with:
 
@@ -54,7 +55,8 @@ Copy `.env.example` to `.env` for local dev and run with:
 node --env-file=.env server/index.js
 ```
 
-On Railway, set these as service variables instead (see below).
+On Railway, set `YOUTUBE_API_KEY` as a service variable if you want live
+status (see below).
 
 ### Editing the creator list
 
@@ -78,6 +80,14 @@ route automatically checks each name against the live Pointercrate list and
 drops any entry that's already been placed, so you don't have to remember
 to remove them once they're verified.
 
+### Editing leaks
+
+Edit `server/data/leaks.json` — an array of
+`{ "id", "title", "url", "summary", "category": "leak", "date", "author" }`
+entries. There's no reliable public API for datamines/leaks, so this list is
+maintained by hand (a scheduled Claude Code routine keeps it fresh — see
+below).
+
 ### Editing the progress tracker
 
 Edit `server/data/progress.json` to update the creator/level/attempts shown
@@ -89,6 +99,13 @@ attempts, so this is manually maintained.
 Edit `server/data/patchNotes.json` — each entry has `version`, `status`
 (`released` or `upcoming`), `date`, `title`, and a `highlights` array.
 
+## Keeping content fresh without doing it yourself
+
+A weekly Claude Code routine checks for newly-hyped extreme demons, updates
+to the progress tracker, and any patch-note changes, and pushes updates to
+`server/data/*.json` on its own. Nothing here requires manual upkeep unless
+you want to override what it finds.
+
 ## Deploying to Railway
 
 This repo deploys as a single Railway service:
@@ -96,10 +113,9 @@ This repo deploys as a single Railway service:
 1. New project → Deploy from GitHub repo → pick this repo/branch.
 2. Build command: `npm run build`. Start command: `npm start`. (Railway's
    Nixpacks builder picks these up automatically from `package.json`.)
-3. Add the environment variables from the table above (or leave them unset —
-   the site still works, just with those sections showing "not configured").
+3. Optionally add `YOUTUBE_API_KEY` for live status.
 4. Generate a domain from the service's Settings → Networking tab.
 
 No database or extra services are needed — everything is fetched live from
-public APIs and cached in memory (demonlist: 30 min, feed: 10 min, live
+public APIs and cached in memory (demonlist: 30 min, feed: 15 min, live
 status: 2 min, daily/weekly: 15 min).

@@ -3,10 +3,11 @@ import FeedPage from "./FeedPage.jsx";
 export default function Updates() {
   return (
     <FeedPage
-      eyebrow="Patch notes"
+      eyebrow="Steam Community Announcements"
       title="Updates"
-      description="New Geometry Dash versions, patch notes and official announcements."
-      dataKey="news"
+      description="Official Geometry Dash announcements, straight from RobTop's Steam news feed."
+      url="/api/feed"
+      dataKey="updates"
     />
   );
 }

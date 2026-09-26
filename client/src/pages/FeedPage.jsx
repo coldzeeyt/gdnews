@@ -4,8 +4,8 @@ import ArticleCard from "../components/ArticleCard.jsx";
 import { CardSkeleton } from "../components/Skeleton.jsx";
 import { ErrorBanner, EmptyState } from "../components/StateBanner.jsx";
 
-export default function FeedPage({ eyebrow, title, description, dataKey }) {
-  const feed = useApi("/api/feed", { pollMs: 10 * 60000 });
+export default function FeedPage({ eyebrow, title, description, url, dataKey }) {
+  const feed = useApi(url, { pollMs: 15 * 60000 });
   const posts = feed.data?.[dataKey];
 
   return (
@@ -14,18 +14,12 @@ export default function FeedPage({ eyebrow, title, description, dataKey }) {
 
       {feed.loading && !posts && <CardSkeleton count={5} />}
       {feed.error && !posts && <ErrorBanner />}
-      {feed.data && feed.data.configured === false && (
-        <div className="card p-4 mb-6 text-sm text-signal-amber border-signal-amber/30">
-          This feed isn't configured yet. Set <code className="text-xs">REDDIT_CLIENT_ID</code> and{" "}
-          <code className="text-xs">REDDIT_CLIENT_SECRET</code> on the server to enable it.
-        </div>
-      )}
-      {posts?.length === 0 && feed.data?.configured !== false && <EmptyState />}
+      {posts?.length === 0 && <EmptyState />}
 
       {posts && (
         <div className="space-y-3">
           {posts.map((post) => (
-            <ArticleCard key={post.id} post={post} />
+            <ArticleCard key={post.id ?? post.url} post={post} />
           ))}
         </div>
       )}
