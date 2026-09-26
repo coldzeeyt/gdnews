@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-base-950 text-slate-200 font-sans antialiased;
+  background-image: var(--tw-gd-glow, none);
+}
+
+::selection {
+  @apply bg-accent-purple/40 text-white;
+}
+
+.card {
+  @apply bg-base-900/80 border border-white/5 rounded-2xl backdrop-blur-sm;
+}
+
+.gradient-text {
+  @apply bg-gd-gradient bg-clip-text text-transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply bg-base-600 rounded-full;
+}
