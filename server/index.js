@@ -14,6 +14,8 @@ import watchlistRouter from "./routes/watchlist.js";
 import dailyRouter from "./routes/daily.js";
 import progressRouter from "./routes/progress.js";
 import leaksRouter from "./routes/leaks.js";
+import searchRouter from "./routes/search.js";
+import playersRouter from "./routes/players.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CLIENT_DIST = path.join(__dirname, "../client/dist");
@@ -40,6 +42,8 @@ app.use("/api/watchlist", watchlistRouter);
 app.use("/api/daily", dailyRouter);
 app.use("/api/progress", progressRouter);
 app.use("/api/leaks", leaksRouter);
+app.use("/api/search", searchRouter);
+app.use("/api/players", playersRouter);
 
 app.use(express.static(CLIENT_DIST, { maxAge: "1h", index: false }));
 app.get("*", (req, res, next) => {

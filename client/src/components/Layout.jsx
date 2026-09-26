@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { to: "/updates", label: "Updates" },
   { to: "/leaks", label: "Leaks" },
   { to: "/upcoming", label: "Upcoming" },
+  { to: "/search", label: "Search" },
 ];
 
 function navClass({ isActive }) {

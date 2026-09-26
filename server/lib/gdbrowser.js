@@ -35,3 +35,13 @@ export async function fetchDailyAndWeekly() {
   ]);
   return { daily, weekly };
 }
+
+export async function searchLevels(query) {
+  const res = await fetch(`${API_BASE}/search/${encodeURIComponent(query)}?count=15`, {
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) throw new Error(`gdbrowser search responded ${res.status}`);
+  const json = await res.json();
+  if (!Array.isArray(json)) return [];
+  return json.map(normalize).filter(Boolean);
+}

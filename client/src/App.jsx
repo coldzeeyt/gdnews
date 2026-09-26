@@ -9,6 +9,7 @@ import Updates from "./pages/Updates.jsx";
 import Leaks from "./pages/Leaks.jsx";
 import Upcoming from "./pages/Upcoming.jsx";
 import Furry from "./pages/Furry.jsx";
+import Search from "./pages/Search.jsx";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="updates" element={<Updates />} />
         <Route path="leaks" element={<Leaks />} />
         <Route path="upcoming" element={<Upcoming />} />
+        <Route path="search" element={<Search />} />
         <Route path="is-colon-a-furry" element={<Furry />} />
       </Route>
     </Routes>

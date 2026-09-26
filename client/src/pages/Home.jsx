@@ -7,6 +7,7 @@ import DemonRow from "../components/DemonRow.jsx";
 import PatchNoteRow from "../components/PatchNoteRow.jsx";
 import LevelCard from "../components/LevelCard.jsx";
 import GriefProgressCard from "../components/GriefProgressCard.jsx";
+import PlayerCountBadge from "../components/PlayerCountBadge.jsx";
 import { GridSkeleton, CardSkeleton } from "../components/Skeleton.jsx";
 import { ErrorBanner, EmptyState } from "../components/StateBanner.jsx";
 
@@ -32,7 +33,7 @@ export default function Home() {
         <h1 className="font-display text-2xl font-semibold text-white uppercase tracking-wide">
           Overview
         </h1>
-        <p className="text-xs text-slate-500">Live creators, demonlist, updates & leaks</p>
+        <PlayerCountBadge />
       </div>
 
       <GriefProgressCard />
