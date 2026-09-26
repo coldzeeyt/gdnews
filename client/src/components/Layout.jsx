@@ -9,7 +9,6 @@ const NAV_ITEMS = [
   { to: "/updates", label: "Updates" },
   { to: "/leaks", label: "Leaks" },
   { to: "/upcoming", label: "Upcoming" },
-  { to: "/is-colon-a-furry", label: "Is Colon a furry?" },
 ];
 
 function navClass({ isActive }) {
@@ -24,6 +23,7 @@ function navClass({ isActive }) {
 export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col">
+      <div className="h-[3px] bg-signal-amber" />
       <header className="border-b border-white/10 bg-ink-900">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-5">
           <NavLink to="/" className="flex items-center gap-2 shrink-0">
@@ -41,6 +41,12 @@ export default function Layout() {
               </NavLink>
             ))}
           </nav>
+          <NavLink
+            to="/is-colon-a-furry"
+            className="ml-auto shrink-0 text-xs italic text-slate-600 hover:text-slate-400 transition-colors hidden md:block"
+          >
+            is Colon a furry?
+          </NavLink>
         </div>
       </header>
 

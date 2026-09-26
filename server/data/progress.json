@@ -3,8 +3,13 @@
   "level": "Grief",
   "best": { "percent": 97, "note": "97% (x2)" },
   "attempts": [
-    { "percent": 97, "note": "97% - x2" },
-    { "percent": 91, "note": "91%" }
+    { "percent": 97, "note": "97% - 20 Sep 2026" },
+    { "percent": 97, "note": "97% - 14 Jun 2026" },
+    { "percent": 100, "note": "25-100%" },
+    { "percent": 97, "note": "46-97%" },
+    { "percent": 92, "note": "17-92% (x3)" },
+    { "percent": 91, "note": "91%" },
+    { "percent": 83, "note": "25-83%" }
   ],
-  "updatedAt": null
+  "updatedAt": "2026-09-26"
 }

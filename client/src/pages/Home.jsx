@@ -7,7 +7,8 @@ import DemonRow from "../components/DemonRow.jsx";
 import PatchNoteRow from "../components/PatchNoteRow.jsx";
 import LevelCard from "../components/LevelCard.jsx";
 import GriefProgressCard from "../components/GriefProgressCard.jsx";
-import { LoadingBanner, ErrorBanner, EmptyState } from "../components/StateBanner.jsx";
+import { GridSkeleton, CardSkeleton } from "../components/Skeleton.jsx";
+import { ErrorBanner, EmptyState } from "../components/StateBanner.jsx";
 
 function SeeAll({ to }) {
   return (
@@ -37,7 +38,7 @@ export default function Home() {
 
       <section>
         <SectionHeader eyebrow="Right now" title="Live creators" action={<SeeAll to="/live" />} />
-        {live.loading && !live.data && <LoadingBanner label="Checking who's live…" />}
+        {live.loading && !live.data && <GridSkeleton count={3} />}
         {live.error && !live.data && <ErrorBanner />}
         {live.data && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -50,7 +51,7 @@ export default function Home() {
 
       <section>
         <SectionHeader eyebrow="Pointercrate" title="Top 10 demonlist" action={<SeeAll to="/demonlist" />} />
-        {demonlist.loading && !demonlist.data && <LoadingBanner label="Loading demonlist…" />}
+        {demonlist.loading && !demonlist.data && <CardSkeleton count={4} />}
         {demonlist.error && !demonlist.data && <ErrorBanner />}
         {demonlist.data && (
           <div className="grid sm:grid-cols-2 gap-3">
@@ -64,7 +65,7 @@ export default function Home() {
       <div className="grid lg:grid-cols-2 gap-8">
         <section>
           <SectionHeader eyebrow="Rate-a-day" title="Daily & weekly" action={<SeeAll to="/daily" />} />
-          {daily.loading && !daily.data && <LoadingBanner />}
+          {daily.loading && !daily.data && <GridSkeleton count={2} />}
           {daily.error && !daily.data && <ErrorBanner />}
           {daily.data && (
             <div className="grid sm:grid-cols-2 gap-3">
@@ -76,7 +77,7 @@ export default function Home() {
 
         <section>
           <SectionHeader eyebrow="Version history" title="Latest patch" action={<SeeAll to="/patch-notes" />} />
-          {patchNotes.loading && !patchNotes.data && <LoadingBanner />}
+          {patchNotes.loading && !patchNotes.data && <CardSkeleton count={1} />}
           {patchNotes.error && !patchNotes.data && <ErrorBanner />}
           {patchNotes.data && <PatchNoteRow entry={patchNotes.data.entries[0]} />}
         </section>
@@ -96,7 +97,7 @@ function FeedPreview({ eyebrow, title, to, posts, loading, error }) {
     <section>
       <SectionHeader eyebrow={eyebrow} title={title} action={<SeeAll to={to} />} />
       <div className="space-y-3">
-        {loading && !posts && <LoadingBanner />}
+        {loading && !posts && <CardSkeleton count={3} />}
         {error && !posts && <ErrorBanner />}
         {posts?.length === 0 && <EmptyState />}
         {posts?.slice(0, 3).map((post) => (

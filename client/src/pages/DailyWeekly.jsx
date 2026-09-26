@@ -1,7 +1,8 @@
 import { useApi } from "../lib/api.js";
 import SectionHeader from "../components/SectionHeader.jsx";
 import LevelCard from "../components/LevelCard.jsx";
-import { LoadingBanner, ErrorBanner } from "../components/StateBanner.jsx";
+import { GridSkeleton } from "../components/Skeleton.jsx";
+import { ErrorBanner } from "../components/StateBanner.jsx";
 
 export default function DailyWeekly() {
   const data = useApi("/api/daily", { pollMs: 15 * 60000 });
@@ -14,7 +15,7 @@ export default function DailyWeekly() {
         description="The current daily level and weekly demon, straight from the game's servers."
       />
 
-      {data.loading && !data.data && <LoadingBanner />}
+      {data.loading && !data.data && <GridSkeleton count={2} />}
       {data.error && !data.data && <ErrorBanner />}
 
       {data.data && (

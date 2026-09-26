@@ -1,7 +1,8 @@
 import { useApi } from "../lib/api.js";
 import SectionHeader from "../components/SectionHeader.jsx";
 import ArticleCard from "../components/ArticleCard.jsx";
-import { LoadingBanner, ErrorBanner, EmptyState } from "../components/StateBanner.jsx";
+import { CardSkeleton } from "../components/Skeleton.jsx";
+import { ErrorBanner, EmptyState } from "../components/StateBanner.jsx";
 
 export default function FeedPage({ eyebrow, title, description, dataKey }) {
   const feed = useApi("/api/feed", { pollMs: 10 * 60000 });
@@ -11,7 +12,7 @@ export default function FeedPage({ eyebrow, title, description, dataKey }) {
     <div>
       <SectionHeader eyebrow={eyebrow} title={title} description={description} />
 
-      {feed.loading && !posts && <LoadingBanner />}
+      {feed.loading && !posts && <CardSkeleton count={5} />}
       {feed.error && !posts && <ErrorBanner />}
       {feed.data && feed.data.configured === false && (
         <div className="card p-4 mb-6 text-sm text-signal-amber border-signal-amber/30">

@@ -8,6 +8,10 @@ html {
 
 body {
   @apply bg-ink-950 text-slate-300 font-sans antialiased;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
 ::selection {
@@ -15,7 +19,32 @@ body {
 }
 
 .card {
-  @apply bg-ink-900 border border-white/10;
+  @apply bg-ink-900 border border-white/10 transition-[border-color,transform] duration-150;
+}
+
+a.card:hover,
+.card.interactive:hover {
+  @apply border-white/25;
+  transform: translateY(-1px);
+}
+
+.skeleton {
+  @apply bg-ink-800 relative overflow-hidden;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
 }
 
 .scrollbar-thin::-webkit-scrollbar {

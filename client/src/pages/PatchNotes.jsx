@@ -1,7 +1,8 @@
 import { useApi } from "../lib/api.js";
 import SectionHeader from "../components/SectionHeader.jsx";
 import PatchNoteRow from "../components/PatchNoteRow.jsx";
-import { LoadingBanner, ErrorBanner } from "../components/StateBanner.jsx";
+import { CardSkeleton } from "../components/Skeleton.jsx";
+import { ErrorBanner } from "../components/StateBanner.jsx";
 
 export default function PatchNotes() {
   const notes = useApi("/api/patch-notes");
@@ -14,7 +15,7 @@ export default function PatchNotes() {
         description="Major Geometry Dash updates, newest first, including what's confirmed for upcoming versions."
       />
 
-      {notes.loading && !notes.data && <LoadingBanner />}
+      {notes.loading && !notes.data && <CardSkeleton count={6} />}
       {notes.error && !notes.data && <ErrorBanner />}
 
       {notes.data && (

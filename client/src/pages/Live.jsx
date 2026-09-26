@@ -1,7 +1,8 @@
 import { useApi } from "../lib/api.js";
 import SectionHeader from "../components/SectionHeader.jsx";
 import LiveCard from "../components/LiveCard.jsx";
-import { LoadingBanner, ErrorBanner } from "../components/StateBanner.jsx";
+import { GridSkeleton } from "../components/Skeleton.jsx";
+import { ErrorBanner } from "../components/StateBanner.jsx";
 
 export default function Live() {
   const live = useApi("/api/live", { pollMs: 120000 });
@@ -15,7 +16,7 @@ export default function Live() {
         description="YouTube live status for the GD creators you follow, refreshed every couple of minutes."
       />
 
-      {live.loading && !live.data && <LoadingBanner label="Checking who's live…" />}
+      {live.loading && !live.data && <GridSkeleton count={3} />}
       {live.error && !live.data && <ErrorBanner />}
 
       {notConfigured && (

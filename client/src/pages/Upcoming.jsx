@@ -2,7 +2,8 @@ import { useApi } from "../lib/api.js";
 import SectionHeader from "../components/SectionHeader.jsx";
 import WatchlistCard from "../components/WatchlistCard.jsx";
 import ArticleCard from "../components/ArticleCard.jsx";
-import { LoadingBanner, ErrorBanner, EmptyState } from "../components/StateBanner.jsx";
+import { CardSkeleton } from "../components/Skeleton.jsx";
+import { ErrorBanner, EmptyState } from "../components/StateBanner.jsx";
 
 export default function Upcoming() {
   const watchlist = useApi("/api/watchlist", { pollMs: 30 * 60000 });
@@ -17,7 +18,7 @@ export default function Upcoming() {
           title="Upcoming top demons"
           description="Hyped extreme demons not yet on the list. Entries drop off automatically once they're verified and placed."
         />
-        {watchlist.loading && !watchlist.data && <LoadingBanner />}
+        {watchlist.loading && !watchlist.data && <CardSkeleton count={3} />}
         {watchlist.error && !watchlist.data && <ErrorBanner />}
         {watchlist.data?.demons.length === 0 && <EmptyState message="Nothing on the watchlist right now." />}
         {watchlist.data && (
@@ -35,7 +36,7 @@ export default function Upcoming() {
           title="Hype & previews"
           description="Teasers, previews and showcases from the community."
         />
-        {feed.loading && !posts && <LoadingBanner />}
+        {feed.loading && !posts && <CardSkeleton count={4} />}
         {feed.error && !posts && <ErrorBanner />}
         {feed.data && feed.data.configured === false && (
           <div className="card p-4 mb-6 text-sm text-signal-amber border-signal-amber/30">
