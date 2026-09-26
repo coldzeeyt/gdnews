@@ -1,5 +1,18 @@
 import { NavLink, Outlet } from "react-router-dom";
 
+const USELESS_LINKS = [
+  { label: "Pointercrate", href: "https://pointercrate.com/" },
+  { label: "GDBrowser", href: "https://gdbrowser.com/" },
+  { label: "GD on Steam", href: "https://store.steampowered.com/app/322170/" },
+  { label: "GeometryDash.com", href: "https://www.geometrydash.com/" },
+  { label: "GD Wiki", href: "https://geometry-dash.fandom.com/" },
+  { label: "GD Fan Wiki", href: "https://geometry-dash-fan.fandom.com/" },
+  { label: "AREDL", href: "https://aredl.net/" },
+  { label: "r/geometrydash", href: "https://reddit.com/r/geometrydash" },
+  { label: "RobTop on X", href: "https://twitter.com/RobTopGames" },
+  { label: "This site's source", href: "https://github.com/coldzeeyt/gdnews" },
+];
+
 const NAV_ITEMS = [
   { to: "/", label: "Home", end: true },
   { to: "/live", label: "Live" },
@@ -56,9 +69,27 @@ export default function Layout() {
       </main>
 
       <footer className="border-t border-white/10 py-5 mt-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 text-xs text-slate-500 flex flex-wrap gap-x-4 gap-y-1 justify-between">
-          <span>GDNews is a fan-made news hub, not affiliated with RobTop Games.</span>
-          <span>Demonlist data via Pointercrate. Level data via GDBrowser.</span>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-600 mb-2">
+            Useless stuff
+          </p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-4">
+            {USELESS_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-slate-500 hover:text-signal-amber transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+          <div className="text-xs text-slate-600 flex flex-wrap gap-x-4 gap-y-1 justify-between border-t border-white/5 pt-3">
+            <span>GDNews is a fan-made news hub, not affiliated with RobTop Games.</span>
+            <span>Demonlist data via Pointercrate. Level data via GDBrowser.</span>
+          </div>
         </div>
       </footer>
     </div>
