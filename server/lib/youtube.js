@@ -4,10 +4,10 @@ const API_BASE = "https://www.googleapis.com/youtube/v3";
 
 // search.list costs 100 quota units per call (a channels.list lookup is only
 // 1 unit but can't tell live status). Default project quota is 10,000/day.
-// With 7 creators that's 700 units per refresh, so the default 120min TTL
-// keeps daily usage around 8,400 - override with YOUTUBE_LIVE_TTL_MINUTES
+// With 8 creators that's 800 units per refresh, so the default 150min TTL
+// keeps daily usage around 7,680 - override with YOUTUBE_LIVE_TTL_MINUTES
 // (lower it if you have extra quota, raise it if you add more creators).
-const LIVE_TTL_MS = (Number(process.env.YOUTUBE_LIVE_TTL_MINUTES) || 120) * 60 * 1000;
+const LIVE_TTL_MS = (Number(process.env.YOUTUBE_LIVE_TTL_MINUTES) || 150) * 60 * 1000;
 const CHANNEL_TTL_MS = 48 * 60 * 60 * 1000;
 
 export function isYoutubeConfigured() {
