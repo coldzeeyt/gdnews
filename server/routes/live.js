@@ -8,9 +8,10 @@ const TTL_MS = 2 * 60 * 1000;
 
 router.get("/", async (_req, res) => {
   try {
-    const creators = await cached(CACHE_KEY, TTL_MS, fetchLiveCreators);
+    const { creators, otherStreams } = await cached(CACHE_KEY, TTL_MS, fetchLiveCreators);
     res.json({
       creators,
+      otherStreams,
       configured: liveConfigStatus(),
       fetchedAt: cacheMeta(CACHE_KEY)?.fetchedAt ?? null,
     });

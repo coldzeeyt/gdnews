@@ -4,10 +4,12 @@ const API_BASE = "https://www.googleapis.com/youtube/v3";
 
 // search.list costs 100 quota units per call (a channels.list lookup is only
 // 1 unit but can't tell live status). Default project quota is 10,000/day.
-// With 8 creators that's 800 units per refresh, so the default 150min TTL
-// keeps daily usage around 7,680 - override with YOUTUBE_LIVE_TTL_MINUTES
-// (lower it if you have extra quota, raise it if you add more creators).
-const LIVE_TTL_MS = (Number(process.env.YOUTUBE_LIVE_TTL_MINUTES) || 150) * 60 * 1000;
+// With 8 pinned creators (800 units) plus one discovery search (100 units +
+// 1 unit for viewer-count enrichment) that's 901 units per refresh, so the
+// default 180min TTL keeps daily usage around 7,200 - override with
+// YOUTUBE_LIVE_TTL_MINUTES (lower it if you have extra quota, raise it if
+// you add more creators).
+const LIVE_TTL_MS = (Number(process.env.YOUTUBE_LIVE_TTL_MINUTES) || 180) * 60 * 1000;
 const CHANNEL_TTL_MS = 48 * 60 * 60 * 1000;
 
 export function isYoutubeConfigured() {
@@ -83,6 +85,7 @@ export async function fetchYoutubeStatuses(creators) {
         const status = await checkChannelLive(channel.channelId);
         result.set(handle, {
           ...status,
+          channelId: channel.channelId,
           avatarUrl: channel.avatarUrl,
           channelUrl,
           watchUrl: status.videoId ? `https://youtube.com/watch?v=${status.videoId}` : null,
@@ -93,4 +96,56 @@ export async function fetchYoutubeStatuses(creators) {
     })
   );
   return result;
+}
+
+/**
+ * Any live YouTube broadcast that turns up for a "geometry dash" search -
+ * not just the pinned roster. This is inherently a live snapshot: a
+ * streamer who has ended their broadcast simply won't be in the next
+ * search.list result, no cleanup needed.
+ */
+export async function fetchDiscoveredLiveStreams() {
+  if (!isYoutubeConfigured()) return [];
+  return cached("youtube:discovered-live", LIVE_TTL_MS, fetchDiscoveredLiveStreamsUncached);
+}
+
+async function fetchDiscoveredLiveStreamsUncached() {
+  const searchQs = new URLSearchParams({
+    part: "snippet",
+    eventType: "live",
+    type: "video",
+    q: "geometry dash",
+    order: "viewCount",
+    maxResults: "15",
+    key: process.env.YOUTUBE_API_KEY,
+  });
+  const searchRes = await fetch(`${API_BASE}/search?${searchQs}`);
+  if (!searchRes.ok) throw new Error(`youtube search.list responded ${searchRes.status}`);
+  const searchJson = await searchRes.json();
+  const items = searchJson.items ?? [];
+  if (items.length === 0) return [];
+
+  const videoIds = items.map((i) => i.id.videoId).join(",");
+  const videosQs = new URLSearchParams({
+    part: "snippet,liveStreamingDetails",
+    id: videoIds,
+    key: process.env.YOUTUBE_API_KEY,
+  });
+  const videosRes = await fetch(`${API_BASE}/videos?${videosQs}`);
+  if (!videosRes.ok) throw new Error(`youtube videos.list responded ${videosRes.status}`);
+  const videosJson = await videosRes.json();
+
+  return (videosJson.items ?? [])
+    .filter((v) => v.liveStreamingDetails?.concurrentViewers != null)
+    .map((v) => ({
+      channelTitle: v.snippet.channelTitle,
+      channelId: v.snippet.channelId,
+      title: v.snippet.title,
+      videoId: v.id,
+      watchUrl: `https://youtube.com/watch?v=${v.id}`,
+      thumbnailUrl: v.snippet.thumbnails?.medium?.url ?? null,
+      viewerCount: Number(v.liveStreamingDetails.concurrentViewers),
+      startedAt: v.liveStreamingDetails.actualStartTime ?? null,
+    }))
+    .sort((a, b) => b.viewerCount - a.viewerCount);
 }

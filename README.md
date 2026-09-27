@@ -2,7 +2,7 @@
 
 A small full-stack app that pulls together:
 
-- **Live** — YouTube live status for a configurable list of GD creators
+- **Live** — YouTube live status for a pinned list of GD creators, plus a "live right now" discovery section that surfaces anyone else currently streaming Geometry Dash on YouTube
 - **Demonlist** — the current Pointercrate top 10 hardest demons
 - **Patch notes** — curated Geometry Dash version history, released and upcoming
 - **Daily/Weekly** — the current daily level and weekly demon (via GDBrowser)
