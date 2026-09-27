@@ -8,6 +8,7 @@ const DEFAULT_SHOWN = 40;
 
 export default function Victors() {
   const demonsApi = useApi("/api/victors/demons");
+  const [mode, setMode] = useState("victors");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(null);
   const [victorsState, setVictorsState] = useState({ data: null, loading: false, error: null });
@@ -15,7 +16,9 @@ export default function Victors() {
   const demons = demonsApi.data?.demons ?? [];
   const q = query.trim().toLowerCase();
   const filtered = q ? demons.filter((d) => d.name.toLowerCase().includes(q)) : demons;
-  const shown = q ? filtered.slice(0, 80) : filtered.slice(0, DEFAULT_SHOWN);
+  const shown = q
+    ? filtered.slice(0, mode === "verifiers" ? 150 : 80)
+    : filtered.slice(0, mode === "verifiers" ? 60 : DEFAULT_SHOWN);
 
   useEffect(() => {
     if (!selected) return;
@@ -42,8 +45,35 @@ export default function Victors() {
       <SectionHeader
         eyebrow="Pointercrate"
         title="Victors"
-        description="Pick an extreme demon to see everyone with an approved 100% completion."
+        description={
+          mode === "victors"
+            ? "Pick an extreme demon to see everyone with an approved 100% completion."
+            : "Every extreme demon and who first verified it."
+        }
       />
+
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setMode("victors")}
+          className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wide border transition-colors ${
+            mode === "victors"
+              ? "border-signal-amber text-white bg-signal-amber/10"
+              : "border-white/10 text-slate-400 hover:border-white/25"
+          }`}
+        >
+          Victors
+        </button>
+        <button
+          onClick={() => setMode("verifiers")}
+          className={`px-3 py-1.5 text-xs font-semibold uppercase tracking-wide border transition-colors ${
+            mode === "verifiers"
+              ? "border-signal-amber text-white bg-signal-amber/10"
+              : "border-white/10 text-slate-400 hover:border-white/25"
+          }`}
+        >
+          Verifiers
+        </button>
+      </div>
 
       <input
         value={query}
@@ -55,7 +85,7 @@ export default function Victors() {
       {demonsApi.loading && !demonsApi.data && <CardSkeleton count={6} />}
       {demonsApi.error && !demonsApi.data && <ErrorBanner />}
 
-      {demons.length > 0 && (
+      {mode === "victors" && demons.length > 0 && (
         <>
           {!q && (
             <p className="text-xs text-slate-600 mb-2">
@@ -81,9 +111,12 @@ export default function Victors() {
         </>
       )}
 
-      {selected && (
+      {mode === "victors" && selected && (
         <div>
-          <SectionHeader title={`${selected.name} · #${selected.position}`} />
+          <SectionHeader
+            title={`${selected.name} · #${selected.position}`}
+            description={`Verified by ${selected.verifier}`}
+          />
           {victorsState.loading && <CardSkeleton count={4} />}
           {victorsState.error && <ErrorBanner />}
           {victorsState.data?.victors?.length === 0 && (
@@ -114,6 +147,41 @@ export default function Victors() {
             </>
           )}
         </div>
+      )}
+
+      {mode === "verifiers" && demons.length > 0 && (
+        <>
+          {!q && (
+            <p className="text-xs text-slate-600 mb-2">
+              Showing {shown.length} of {demons.length} - search by name for any other demon.
+            </p>
+          )}
+          {q && (
+            <p className="text-xs text-slate-600 mb-2">
+              {filtered.length} match{filtered.length === 1 ? "" : "es"}
+            </p>
+          )}
+          {q && filtered.length === 0 && <EmptyState message="No demons match that search." />}
+          <div className="space-y-2">
+            {shown.map((d) => (
+              <div key={d.id} className="card flex items-center gap-3 p-3">
+                <span className="font-mono text-xs text-slate-500 w-10 shrink-0">#{d.position}</span>
+                <span className="text-white font-medium flex-1 truncate">{d.name}</span>
+                <span className="text-sm text-slate-400 shrink-0">Verified by {d.verifier}</span>
+                {d.videoUrl && (
+                  <a
+                    href={d.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-semibold uppercase tracking-wide text-signal-amber hover:text-white shrink-0"
+                  >
+                    Watch
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

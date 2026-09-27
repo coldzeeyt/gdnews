@@ -31,15 +31,18 @@ function CopyButton({ text }) {
   );
 }
 
+const DEFAULT_SHOWN = 60;
+
 export default function Passwords() {
   const { data, loading, error } = useApi("/api/passwords");
   const [query, setQuery] = useState("");
 
   const all = data?.passwords ?? [];
   const q = query.trim().toLowerCase();
-  const filtered = q
+  const matches = q
     ? all.filter((p) => p.name.toLowerCase().includes(q) || p.creator.toLowerCase().includes(q))
     : all;
+  const filtered = q ? matches : matches.slice(0, DEFAULT_SHOWN);
 
   return (
     <div>
@@ -58,7 +61,13 @@ export default function Passwords() {
 
       {loading && !data && <CardSkeleton count={6} />}
       {error && !data && <ErrorBanner />}
-      {data && filtered.length === 0 && <EmptyState message="No levels match that search." />}
+      {data && matches.length === 0 && <EmptyState message="No levels match that search." />}
+
+      {!q && all.length > 0 && (
+        <p className="text-xs text-slate-600 mb-2">
+          Showing {filtered.length} of {all.length} - search by level or creator for the rest.
+        </p>
+      )}
 
       {filtered.length > 0 && (
         <div className="space-y-2">
@@ -85,8 +94,7 @@ export default function Passwords() {
       )}
 
       <p className="text-xs text-slate-600 mt-6">
-        A small hand-picked sample - the community keeps a much larger,
-        constantly-updated list on the{" "}
+        Sourced from the community-maintained list on the{" "}
         <a
           href="https://gdforum.freeforums.net/thread/51345/list-level-passwords"
           target="_blank"

@@ -71,7 +71,13 @@ export async function fetchDemonList() {
   return demons
     .slice()
     .sort((a, b) => a.position - b.position)
-    .map((d) => ({ id: d.id, position: d.position, name: d.name }));
+    .map((d) => ({
+      id: d.id,
+      position: d.position,
+      name: d.name,
+      verifier: d.verifier?.name ?? "Unknown",
+      videoUrl: d.video ?? null,
+    }));
 }
 
 export function fetchVictors(demonId) {
