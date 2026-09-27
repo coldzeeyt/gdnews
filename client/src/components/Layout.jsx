@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { to: "/", label: "Home", end: true },
   { to: "/live", label: "Live" },
   { to: "/demonlist", label: "Demonlist" },
+  { to: "/victors", label: "Victors" },
   { to: "/patch-notes", label: "Patch Notes" },
   { to: "/daily", label: "Daily/Weekly" },
   { to: "/updates", label: "Updates" },

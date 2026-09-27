@@ -11,6 +11,7 @@ import Upcoming from "./pages/Upcoming.jsx";
 import Furry from "./pages/Furry.jsx";
 import Search from "./pages/Search.jsx";
 import Passwords from "./pages/Passwords.jsx";
+import Victors from "./pages/Victors.jsx";
 import LiveStats from "./pages/LiveStats.jsx";
 import Admin from "./pages/Admin.jsx";
 
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="upcoming" element={<Upcoming />} />
         <Route path="search" element={<Search />} />
         <Route path="passwords" element={<Passwords />} />
+        <Route path="victors" element={<Victors />} />
         <Route path="live-stats" element={<LiveStats />} />
         <Route path="admin" element={<Admin />} />
         <Route path="is-colon-a-furry" element={<Furry />} />

@@ -1,8 +1,11 @@
 import { cached } from "./cache.js";
 
 const API_BASE = "https://pointercrate.com/api/v2";
+// Record listing only exists on the older v1 API - v2 dropped it.
+const API_BASE_V1 = "https://pointercrate.com/api/v1";
 const PAGE_SIZE = 100;
 const ALL_DEMONS_TTL_MS = 30 * 60 * 1000;
+const VICTORS_TTL_MS = 15 * 60 * 1000;
 
 /**
  * Pointercrate's demon list is paginated by internal `id`, not by list
@@ -61,6 +64,39 @@ export async function fetchTop10Demons() {
       levelId: d.level_id ?? null,
       thumbnail: d.thumbnail ?? (d.video ? youtubeThumbFromUrl(d.video) : null),
     }));
+}
+
+export async function fetchDemonList() {
+  const demons = await fetchAllDemonsCached();
+  return demons
+    .slice()
+    .sort((a, b) => a.position - b.position)
+    .map((d) => ({ id: d.id, position: d.position, name: d.name }));
+}
+
+export function fetchVictors(demonId) {
+  return cached(`pointercrate:victors:${demonId}`, VICTORS_TTL_MS, async () => {
+    const res = await fetch(
+      `${API_BASE_V1}/records/?demon_id=${demonId}&status=APPROVED&progress=100&limit=100`,
+      {
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "gdnews/1.0 (+https://github.com/coldzeeyt/gdnews)",
+        },
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error(`pointercrate responded ${res.status}`);
+    }
+
+    const records = await res.json();
+    return records.map((r) => ({
+      id: r.id,
+      player: r.player?.name ?? "Unknown",
+      video: r.video ?? null,
+    }));
+  });
 }
 
 export async function isDemonPlaced(name) {
