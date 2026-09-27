@@ -6,7 +6,7 @@ import LiveCard from "../components/LiveCard.jsx";
 import DemonRow from "../components/DemonRow.jsx";
 import PatchNoteRow from "../components/PatchNoteRow.jsx";
 import LevelCard from "../components/LevelCard.jsx";
-import GriefProgressCard from "../components/GriefProgressCard.jsx";
+import LiveProgressCard from "../components/LiveProgressCard.jsx";
 import PlayerCountBadge from "../components/PlayerCountBadge.jsx";
 import { GridSkeleton, CardSkeleton } from "../components/Skeleton.jsx";
 import { ErrorBanner, EmptyState } from "../components/StateBanner.jsx";
@@ -36,7 +36,7 @@ export default function Home() {
         <PlayerCountBadge />
       </div>
 
-      <GriefProgressCard />
+      <LiveProgressCard />
 
       <section>
         <SectionHeader eyebrow="Right now" title="Live creators" action={<SeeAll to="/live" />} />

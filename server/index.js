@@ -12,10 +12,11 @@ import liveRouter from "./routes/live.js";
 import patchNotesRouter from "./routes/patchNotes.js";
 import watchlistRouter from "./routes/watchlist.js";
 import dailyRouter from "./routes/daily.js";
-import progressRouter from "./routes/progress.js";
 import leaksRouter from "./routes/leaks.js";
 import searchRouter from "./routes/search.js";
 import playersRouter from "./routes/players.js";
+import adminRouter from "./routes/admin.js";
+import liveProgressRouter from "./routes/liveProgress.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CLIENT_DIST = path.join(__dirname, "../client/dist");
@@ -24,6 +25,7 @@ const app = express();
 app.set("trust proxy", 1);
 app.use(compression());
 app.use(cors());
+app.use(express.json());
 
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -40,10 +42,11 @@ app.use("/api/live", liveRouter);
 app.use("/api/patch-notes", patchNotesRouter);
 app.use("/api/watchlist", watchlistRouter);
 app.use("/api/daily", dailyRouter);
-app.use("/api/progress", progressRouter);
 app.use("/api/leaks", leaksRouter);
 app.use("/api/search", searchRouter);
 app.use("/api/players", playersRouter);
+app.use("/api/admin", adminRouter);
+app.use("/api/live-progress", liveProgressRouter);
 
 app.use(express.static(CLIENT_DIST, { maxAge: "1h", index: false }));
 app.get("*", (req, res, next) => {

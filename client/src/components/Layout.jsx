@@ -23,6 +23,7 @@ const NAV_ITEMS = [
   { to: "/leaks", label: "Leaks" },
   { to: "/upcoming", label: "Upcoming" },
   { to: "/search", label: "Search" },
+  { to: "/live-stats", label: "Live Stats" },
 ];
 
 function navClass({ isActive }) {
@@ -88,7 +89,12 @@ export default function Layout() {
           </div>
           <div className="text-xs text-slate-600 flex flex-wrap gap-x-4 gap-y-1 justify-between border-t border-white/5 pt-3">
             <span>GDNews is a fan-made news hub, not affiliated with RobTop Games.</span>
-            <span>Demonlist data via Pointercrate. Level data via GDBrowser.</span>
+            <span className="flex gap-3">
+              <span>Demonlist data via Pointercrate. Level data via GDBrowser.</span>
+              <NavLink to="/admin" className="hover:text-slate-400">
+                admin
+              </NavLink>
+            </span>
           </div>
         </div>
       </footer>

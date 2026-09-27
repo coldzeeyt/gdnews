@@ -9,7 +9,7 @@ A small full-stack app that pulls together:
 - **Updates** — official RobTop announcements from Geometry Dash's Steam news feed
 - **Leaks** — a hand-curated, self-maintained list (no public API exists for this)
 - **Upcoming** — an extreme-demon watchlist (auto-drops entries once verified) plus event/contest previews from Steam news
-- A **progress tracker** on the home page for a creator working on a specific level (manually updated - there's no API for stream attempt counts)
+- A **live progress tracker** (home page widget + full `/live-stats` page) showing attempt percentages for whichever creator/level is currently being tracked, updated in real time from a passcode-gated `/admin` panel — there's no public API for stream attempt counts, so this is how it gets fed live during a stream
 
 Everything except live status works with **zero configuration** - no API
 keys, no accounts to register. Live status is the one opt-in feature, and
@@ -88,11 +88,15 @@ entries. There's no reliable public API for datamines/leaks, so this list is
 maintained by hand (a scheduled Claude Code routine keeps it fresh — see
 below).
 
-### Editing the progress tracker
+### Live progress tracker (`/admin`)
 
-Edit `server/data/progress.json` to update the creator/level/attempts shown
-on the home page. There's no public API for in-progress verification
-attempts, so this is manually maintained.
+Go to `/admin`, enter the passcode (`ADMIN_PASSCODE`, defaults to
+`08092013`), set the streamer + level you're watching, and log each
+attempt's percentage (decimals supported) plus an optional note as it
+happens. It shows up on the home page and `/live-stats` within seconds -
+both poll every 5-15s. `server/data/progress.json` is only used to seed the
+very first run; after that, all state lives in whatever `DATA_DIR` points
+at (a Railway volume in production, see below), not in git.
 
 ### Editing patch notes
 
@@ -101,10 +105,11 @@ Edit `server/data/patchNotes.json` — each entry has `version`, `status`
 
 ## Keeping content fresh without doing it yourself
 
-A weekly Claude Code routine checks for newly-hyped extreme demons, updates
-to the progress tracker, and any patch-note changes, and pushes updates to
-`server/data/*.json` on its own. Nothing here requires manual upkeep unless
-you want to override what it finds.
+A weekly Claude Code routine checks for newly-hyped extreme demons and any
+patch-note changes, and pushes updates to `server/data/*.json` on its own.
+(The live progress tracker isn't part of this — that's fed directly through
+`/admin` in real time, not through data files.) Nothing here requires manual
+upkeep unless you want to override what it finds.
 
 ## Deploying to Railway
 
@@ -114,8 +119,12 @@ This repo deploys as a single Railway service:
 2. Build command: `npm run build`. Start command: `npm start`. (Railway's
    Nixpacks builder picks these up automatically from `package.json`.)
 3. Optionally add `YOUTUBE_API_KEY` for live status.
-4. Generate a domain from the service's Settings → Networking tab.
+4. Add a volume mounted at `/data` and set `DATA_DIR=/data`, so the live
+   progress tracker's data survives redeploys. Also set `ADMIN_PASSCODE`
+   (or leave it at the default).
+5. Generate a domain from the service's Settings → Networking tab.
 
-No database or extra services are needed — everything is fetched live from
+No database is needed for anything except the live progress tracker, which
+just needs that one small volume — everything else is fetched live from
 public APIs and cached in memory (demonlist: 30 min, feed: 15 min, live
-status: 2 min, daily/weekly: 15 min).
+status: 3h, daily/weekly: 15 min).

@@ -9,6 +9,7 @@ async function getJson(url) {
 /** Polls a JSON endpoint, keeping the last good value on screen through errors. */
 export function useApi(url, { pollMs } = {}) {
   const [state, setState] = useState({ data: null, error: null, loading: true });
+  const [refetchNonce, setRefetchNonce] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -28,9 +29,9 @@ export function useApi(url, { pollMs } = {}) {
       cancelled = true;
       if (id) clearInterval(id);
     };
-  }, [url, pollMs]);
+  }, [url, pollMs, refetchNonce]);
 
-  return state;
+  return { ...state, refetch: () => setRefetchNonce((n) => n + 1) };
 }
 
 export function timeAgo(unixSeconds) {
