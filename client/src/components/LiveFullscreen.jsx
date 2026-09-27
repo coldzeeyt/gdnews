@@ -39,7 +39,7 @@ export default function LiveFullscreen({ track }) {
   const rootRef = useRef(null);
   const isMobile = useIsMobile();
   const [showPastStreams, setShowPastStreams] = useState(false);
-  const [fsHint, setFsHint] = useState(false);
+  const [showSafariHelp, setShowSafariHelp] = useState(false);
 
   const latest = track.attempts[0];
   const currentStreamNumber = track.streamNumber || null;
@@ -57,9 +57,9 @@ export default function LiveFullscreen({ track }) {
       await requestFullscreenCompat(rootRef.current);
     } catch {
       // No Fullscreen API here - notably iOS Safari, which has none for
-      // regular elements. Say so instead of leaving the button looking dead.
-      setFsHint(true);
-      setTimeout(() => setFsHint(false), 6000);
+      // regular elements. Surface the explanation instead of leaving the
+      // button looking dead.
+      setShowSafariHelp(true);
       return;
     }
     try {
@@ -75,11 +75,17 @@ export default function LiveFullscreen({ track }) {
         <div className="absolute top-4 right-4 text-right">
           <button
             onClick={goFullscreen}
-            className="text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-signal-amber"
+            className="text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-signal-amber block"
           >
             Full screen ⤢
           </button>
-          {fsHint && (
+          <button
+            onClick={() => setShowSafariHelp((s) => !s)}
+            className="text-[10px] uppercase tracking-wide text-slate-700 hover:text-slate-400 mt-1"
+          >
+            Safari help
+          </button>
+          {showSafariHelp && (
             <p className="text-xs text-slate-500 normal-case mt-2 max-w-[220px]">
               Safari on iPhone/iPad can't fullscreen a page - tap Share → Add to Home Screen
               and open it from there for a full-screen, app-like view.
