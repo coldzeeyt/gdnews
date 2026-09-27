@@ -36,9 +36,11 @@ router.post("/tracks", requireAdmin, (req, res) => {
 });
 
 router.patch("/tracks/:trackId", requireAdmin, (req, res) => {
-  const { streamNumber } = req.body || {};
+  const { streamer, level, streamNumber } = req.body || {};
   const track = updateTrack(req.params.trackId, {
-    streamNumber: streamNumber ? String(streamNumber).slice(0, 20) : null,
+    streamer: streamer !== undefined ? String(streamer).slice(0, 60) : undefined,
+    level: level !== undefined ? String(level).slice(0, 80) : undefined,
+    streamNumber: streamNumber !== undefined ? (streamNumber ? String(streamNumber).slice(0, 20) : null) : undefined,
   });
   if (!track) return res.status(404).json({ error: "Track not found" });
   res.json(track);

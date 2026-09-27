@@ -81,6 +81,8 @@ function Dashboard() {
   const [newStreamer, setNewStreamer] = useState("");
   const [newLevel, setNewLevel] = useState("");
   const [newStreamNumber, setNewStreamNumber] = useState("");
+  const [editStreamer, setEditStreamer] = useState("");
+  const [editLevel, setEditLevel] = useState("");
   const [streamNumberEdit, setStreamNumberEdit] = useState("");
   const [percent, setPercent] = useState("");
   const [note, setNote] = useState("");
@@ -94,7 +96,9 @@ function Dashboard() {
 
   useEffect(() => {
     setStreamNumberEdit(selectedTrack?.streamNumber || "");
-  }, [selectedTrack?.id, selectedTrack?.streamNumber]);
+    setEditStreamer(selectedTrack?.streamer || "");
+    setEditLevel(selectedTrack?.level || "");
+  }, [selectedTrack?.id, selectedTrack?.streamNumber, selectedTrack?.streamer, selectedTrack?.level]);
 
   async function createTrack(e) {
     e.preventDefault();
@@ -117,15 +121,15 @@ function Dashboard() {
     }
   }
 
-  async function saveStreamNumber(e) {
+  async function saveTrackDetails(e) {
     e.preventDefault();
     if (!selectedTrack) return;
     const res = await adminFetch(`/api/admin/tracks/${selectedTrack.id}`, {
       method: "PATCH",
-      body: JSON.stringify({ streamNumber: streamNumberEdit }),
+      body: JSON.stringify({ streamer: editStreamer, level: editLevel, streamNumber: streamNumberEdit }),
     });
     if (res.ok) {
-      setStatus("Stream number updated.");
+      setStatus("Track details updated.");
       live.refetch();
     }
   }
@@ -233,14 +237,26 @@ function Dashboard() {
                 </button>
               }
             />
-            <form onSubmit={saveStreamNumber} className="flex items-center gap-2 mb-4">
+            <form onSubmit={saveTrackDetails} className="flex flex-wrap items-center gap-2 mb-4">
+              <input
+                value={editStreamer}
+                onChange={(e) => setEditStreamer(e.target.value)}
+                placeholder="Streamer"
+                className="w-32 bg-ink-900 border border-white/10 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-signal-amber/60"
+              />
+              <input
+                value={editLevel}
+                onChange={(e) => setEditLevel(e.target.value)}
+                placeholder="Level"
+                className="w-32 bg-ink-900 border border-white/10 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-signal-amber/60"
+              />
               <label className="text-xs text-slate-500 shrink-0">Stream #</label>
               <input
                 value={streamNumberEdit}
                 onChange={(e) => setStreamNumberEdit(e.target.value)}
                 placeholder="e.g. 47"
                 inputMode="numeric"
-                className="w-24 bg-ink-900 border border-white/10 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-signal-amber/60"
+                className="w-20 bg-ink-900 border border-white/10 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-signal-amber/60"
               />
               <button
                 type="submit"

@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { useApi } from "../lib/api.js";
 import SectionHeader from "./SectionHeader.jsx";
 import TrackCard from "./TrackCard.jsx";
@@ -19,14 +18,6 @@ export default function LiveProgressCard() {
         eyebrow="Live tracking"
         title="Progress watch"
         description="Logged live from stream as attempts happen."
-        action={
-          <Link
-            to="/live-stats"
-            className="text-xs font-semibold uppercase tracking-wide text-signal-amber hover:text-white"
-          >
-            {tracks.length > 1 ? `See all ${tracks.length}` : "Full history"}
-          </Link>
-        }
       />
       <TrackCard track={tracks[0]} />
     </section>

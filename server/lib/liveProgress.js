@@ -55,7 +55,14 @@ function migrate(data) {
 
 function load() {
   const raw = readStore(STORE_NAME, null);
-  return migrate(raw ?? seedFromLegacyData());
+  if (raw && Array.isArray(raw.tracks)) return raw;
+  // First read ever (no store file) or an old single-session shape on disk -
+  // persist the migrated/seeded result immediately so the ids it just
+  // generated stay stable across the next request instead of being
+  // regenerated (and orphaned) on every read.
+  const migrated = migrate(raw ?? seedFromLegacyData());
+  save(migrated);
+  return migrated;
 }
 
 function save(data) {
@@ -104,11 +111,13 @@ export function createTrack(streamer, level, streamNumber) {
   return track;
 }
 
-export function updateTrack(trackId, { streamNumber }) {
+export function updateTrack(trackId, { streamer, level, streamNumber }) {
   const data = load();
   const track = data.tracks.find((t) => t.id === trackId);
   if (!track) return null;
-  track.streamNumber = streamNumber || null;
+  if (streamer !== undefined) track.streamer = streamer;
+  if (level !== undefined) track.level = level;
+  if (streamNumber !== undefined) track.streamNumber = streamNumber || null;
   save(data);
   return withBest(track);
 }
@@ -121,6 +130,7 @@ export function addAttempt(trackId, percent, note) {
     id: randomUUID(),
     percent,
     note: note || null,
+    streamNumber: track.streamNumber || null,
     createdAt: new Date().toISOString(),
   });
   save(data);
