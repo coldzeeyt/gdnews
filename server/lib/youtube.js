@@ -109,6 +109,17 @@ export async function fetchDiscoveredLiveStreams() {
   return cached("youtube:discovered-live", LIVE_TTL_MS, fetchDiscoveredLiveStreamsUncached);
 }
 
+// Covers scripts common on non-English GD streams (Cyrillic, CJK, Thai,
+// Arabic, Hebrew) - used as a fallback when YouTube gives no language
+// metadata for the stream, which is the common case for live broadcasts.
+const NON_LATIN_SCRIPT = /[Ѐ-ӿ一-鿿぀-ヿ가-힣฀-๿؀-ۿ֐-׿]/;
+
+function isEnglish(video, snippetTitle) {
+  const lang = video.snippet.defaultAudioLanguage || video.snippet.defaultLanguage;
+  if (lang) return lang.toLowerCase().startsWith("en");
+  return !NON_LATIN_SCRIPT.test(snippetTitle) && !NON_LATIN_SCRIPT.test(video.snippet.channelTitle);
+}
+
 async function fetchDiscoveredLiveStreamsUncached() {
   const searchQs = new URLSearchParams({
     part: "snippet",
@@ -116,7 +127,8 @@ async function fetchDiscoveredLiveStreamsUncached() {
     type: "video",
     q: "geometry dash",
     order: "viewCount",
-    maxResults: "15",
+    relevanceLanguage: "en",
+    maxResults: "25",
     key: process.env.YOUTUBE_API_KEY,
   });
   const searchRes = await fetch(`${API_BASE}/search?${searchQs}`);
@@ -137,6 +149,7 @@ async function fetchDiscoveredLiveStreamsUncached() {
 
   return (videosJson.items ?? [])
     .filter((v) => v.liveStreamingDetails?.concurrentViewers != null)
+    .filter((v) => isEnglish(v, v.snippet.title))
     .map((v) => ({
       channelTitle: v.snippet.channelTitle,
       channelId: v.snippet.channelId,
