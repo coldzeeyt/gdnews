@@ -23,6 +23,7 @@ const NAV_ITEMS = [
   { to: "/leaks", label: "Leaks" },
   { to: "/upcoming", label: "Upcoming" },
   { to: "/search", label: "Search" },
+  { to: "/passwords", label: "Passwords" },
   { to: "/live-stats", label: "Live Stats" },
 ];
 
