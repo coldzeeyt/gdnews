@@ -1,7 +1,7 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { verifyPasscode, issueToken, requireAdmin } from "../lib/adminAuth.js";
-import { startSession, addAttempt, deleteAttempt } from "../lib/liveProgress.js";
+import { createTrack, updateTrack, addAttempt, deleteAttempt, deleteTrack } from "../lib/liveProgress.js";
 
 const router = Router();
 
@@ -22,30 +22,48 @@ router.post("/login", loginLimiter, (req, res) => {
 
 router.get("/me", requireAdmin, (_req, res) => res.json({ ok: true }));
 
-router.post("/session", requireAdmin, (req, res) => {
-  const { streamer, level, keepAttempts } = req.body || {};
+router.post("/tracks", requireAdmin, (req, res) => {
+  const { streamer, level, streamNumber } = req.body || {};
   if (!streamer || !level) {
     return res.status(400).json({ error: "streamer and level are required" });
   }
-  const data = startSession(String(streamer).slice(0, 60), String(level).slice(0, 80), {
-    keepAttempts: Boolean(keepAttempts),
-  });
-  res.json(data);
+  const track = createTrack(
+    String(streamer).slice(0, 60),
+    String(level).slice(0, 80),
+    streamNumber ? String(streamNumber).slice(0, 20) : null
+  );
+  res.json(track);
 });
 
-router.post("/attempt", requireAdmin, (req, res) => {
+router.patch("/tracks/:trackId", requireAdmin, (req, res) => {
+  const { streamNumber } = req.body || {};
+  const track = updateTrack(req.params.trackId, {
+    streamNumber: streamNumber ? String(streamNumber).slice(0, 20) : null,
+  });
+  if (!track) return res.status(404).json({ error: "Track not found" });
+  res.json(track);
+});
+
+router.delete("/tracks/:trackId", requireAdmin, (req, res) => {
+  deleteTrack(req.params.trackId);
+  res.json({ ok: true });
+});
+
+router.post("/tracks/:trackId/attempt", requireAdmin, (req, res) => {
   const { percent, note } = req.body || {};
   const value = Number(percent);
   if (!Number.isFinite(value) || value < 0 || value > 100) {
     return res.status(400).json({ error: "percent must be a number between 0 and 100" });
   }
-  const data = addAttempt(value, note ? String(note).slice(0, 280) : null);
-  res.json(data);
+  const track = addAttempt(req.params.trackId, value, note ? String(note).slice(0, 280) : null);
+  if (!track) return res.status(404).json({ error: "Track not found" });
+  res.json(track);
 });
 
-router.delete("/attempt/:id", requireAdmin, (req, res) => {
-  const data = deleteAttempt(req.params.id);
-  res.json(data);
+router.delete("/tracks/:trackId/attempt/:attemptId", requireAdmin, (req, res) => {
+  const track = deleteAttempt(req.params.trackId, req.params.attemptId);
+  if (!track) return res.status(404).json({ error: "Track not found" });
+  res.json(track);
 });
 
 export default router;

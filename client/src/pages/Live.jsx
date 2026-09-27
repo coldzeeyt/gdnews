@@ -1,16 +1,43 @@
+import { Link } from "react-router-dom";
 import { useApi } from "../lib/api.js";
 import SectionHeader from "../components/SectionHeader.jsx";
 import LiveCard from "../components/LiveCard.jsx";
 import OtherStreamCard from "../components/OtherStreamCard.jsx";
+import TrackCard from "../components/TrackCard.jsx";
 import { GridSkeleton, CardSkeleton } from "../components/Skeleton.jsx";
 import { ErrorBanner, EmptyState } from "../components/StateBanner.jsx";
 
 export default function Live() {
   const live = useApi("/api/live", { pollMs: 120000 });
+  const progress = useApi("/api/live-progress", { pollMs: 5000 });
+  const tracks = progress.data?.tracks ?? [];
   const notConfigured = live.data?.configured && !live.data.configured.youtube;
 
   return (
     <div className="space-y-10">
+      {tracks.length > 0 && (
+        <div>
+          <SectionHeader
+            eyebrow="Live tracking"
+            title="Progress watch"
+            description="Logged live from stream as attempts happen."
+            action={
+              <Link
+                to="/live-stats"
+                className="text-xs font-semibold uppercase tracking-wide text-signal-amber hover:text-white"
+              >
+                Full history
+              </Link>
+            }
+          />
+          <div className="space-y-4">
+            {tracks.map((t) => (
+              <TrackCard key={t.id} track={t} />
+            ))}
+          </div>
+        </div>
+      )}
+
       <div>
         <SectionHeader
           eyebrow="Pinned"

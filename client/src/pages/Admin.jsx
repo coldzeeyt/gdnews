@@ -38,15 +38,7 @@ function PasscodeGate({ onUnlocked }) {
       <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 mb-4">
         Enter passcode
       </p>
-      <div className="flex justify-center gap-2 mb-6">
-        {Array.from({ length: Math.max(code.length, 1) }).map((_, i) => (
-          <span
-            key={i}
-            className={`h-3 w-3 rounded-full ${i < code.length ? "bg-signal-amber" : "bg-ink-700"}`}
-          />
-        ))}
-      </div>
-      <Numpad value={code} onChange={setCode} mode="pin" maxLength={12} />
+      <Numpad value={code} onChange={setCode} mode="pin" maxLength={12} onSubmit={submit} autoFocus />
       {error && <p className="text-signal-red text-sm mt-4">{error}</p>}
       <button
         onClick={submit}
@@ -59,39 +51,90 @@ function PasscodeGate({ onUnlocked }) {
   );
 }
 
+function TrackSwitcher({ tracks, selectedId, onSelect }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {tracks.map((t) => (
+        <button
+          key={t.id}
+          onClick={() => onSelect(t.id)}
+          className={`px-3 py-1.5 text-sm border transition-colors ${
+            t.id === selectedId
+              ? "border-signal-amber text-white bg-signal-amber/10"
+              : "border-white/10 text-slate-400 hover:border-white/25"
+          }`}
+        >
+          {t.streamer} × {t.level}
+          {t.streamNumber && <span className="opacity-60"> #{t.streamNumber}</span>}{" "}
+          <span className="text-xs opacity-60">({t.attempts.length})</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Dashboard() {
   const live = useApi("/api/live-progress", { pollMs: 5000 });
-  const creators = useApi("/api/live");
-  const watchlist = useApi("/api/watchlist");
+  const tracks = live.data?.tracks ?? [];
 
-  const [streamer, setStreamer] = useState("");
-  const [level, setLevel] = useState("");
-  const [keepAttempts, setKeepAttempts] = useState(true);
+  const [selectedId, setSelectedId] = useState(null);
+  const [newStreamer, setNewStreamer] = useState("");
+  const [newLevel, setNewLevel] = useState("");
+  const [newStreamNumber, setNewStreamNumber] = useState("");
+  const [streamNumberEdit, setStreamNumberEdit] = useState("");
   const [percent, setPercent] = useState("");
   const [note, setNote] = useState("");
   const [status, setStatus] = useState(null);
 
   useEffect(() => {
-    if (live.data?.streamer) setStreamer(live.data.streamer);
-    if (live.data?.level) setLevel(live.data.level);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [live.data === null]);
+    if (!selectedId && tracks.length > 0) setSelectedId(tracks[0].id);
+  }, [tracks, selectedId]);
 
-  async function saveSession(e) {
+  const selectedTrack = tracks.find((t) => t.id === selectedId) || null;
+
+  useEffect(() => {
+    setStreamNumberEdit(selectedTrack?.streamNumber || "");
+  }, [selectedTrack?.id, selectedTrack?.streamNumber]);
+
+  async function createTrack(e) {
     e.preventDefault();
+    if (!newStreamer || !newLevel) return;
     setStatus(null);
-    const res = await adminFetch("/api/admin/session", {
+    const res = await adminFetch("/api/admin/tracks", {
       method: "POST",
-      body: JSON.stringify({ streamer, level, keepAttempts }),
+      body: JSON.stringify({ streamer: newStreamer, level: newLevel, streamNumber: newStreamNumber }),
     });
-    setStatus(res.ok ? "Session updated." : "Failed to update session.");
-    live.refetch();
+    if (res.ok) {
+      const track = await res.json();
+      setSelectedId(track.id);
+      setNewStreamer("");
+      setNewLevel("");
+      setNewStreamNumber("");
+      setStatus(`Started tracking ${track.streamer} × ${track.level}.`);
+      live.refetch();
+    } else {
+      setStatus("Failed to create track.");
+    }
+  }
+
+  async function saveStreamNumber(e) {
+    e.preventDefault();
+    if (!selectedTrack) return;
+    const res = await adminFetch(`/api/admin/tracks/${selectedTrack.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ streamNumber: streamNumberEdit }),
+    });
+    if (res.ok) {
+      setStatus("Stream number updated.");
+      live.refetch();
+    }
   }
 
   async function logAttempt(e) {
     e.preventDefault();
+    if (!selectedTrack) return;
     setStatus(null);
-    const res = await adminFetch("/api/admin/attempt", {
+    const res = await adminFetch(`/api/admin/tracks/${selectedTrack.id}/attempt`, {
       method: "POST",
       body: JSON.stringify({ percent, note }),
     });
@@ -106,8 +149,19 @@ function Dashboard() {
     }
   }
 
-  async function removeAttempt(id) {
-    await adminFetch(`/api/admin/attempt/${id}`, { method: "DELETE" });
+  async function removeAttempt(attemptId) {
+    if (!selectedTrack) return;
+    await adminFetch(`/api/admin/tracks/${selectedTrack.id}/attempt/${attemptId}`, {
+      method: "DELETE",
+    });
+    live.refetch();
+  }
+
+  async function removeTrack() {
+    if (!selectedTrack) return;
+    if (!window.confirm(`Delete ${selectedTrack.streamer} × ${selectedTrack.level} entirely?`)) return;
+    await adminFetch(`/api/admin/tracks/${selectedTrack.id}`, { method: "DELETE" });
+    setSelectedId(null);
     live.refetch();
   }
 
@@ -128,108 +182,118 @@ function Dashboard() {
       </div>
 
       <section>
-        <SectionHeader eyebrow="Currently tracking" title="Session" />
-        <form onSubmit={saveSession} className="card p-4 space-y-3">
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-slate-500 block mb-1">Streamer</label>
-              <input
-                list="streamer-options"
-                value={streamer}
-                onChange={(e) => setStreamer(e.target.value)}
-                className="w-full bg-ink-900 border border-white/10 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-signal-amber/60"
-                placeholder="Doggie"
-              />
-              <datalist id="streamer-options">
-                {creators.data?.creators.map((c) => (
-                  <option key={c.displayName} value={c.displayName} />
-                ))}
-              </datalist>
-            </div>
-            <div>
-              <label className="text-xs text-slate-500 block mb-1">Level</label>
-              <input
-                list="level-options"
-                value={level}
-                onChange={(e) => setLevel(e.target.value)}
-                className="w-full bg-ink-900 border border-white/10 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-signal-amber/60"
-                placeholder="Grief"
-              />
-              <datalist id="level-options">
-                {watchlist.data?.demons.map((d) => (
-                  <option key={d.name} value={d.name} />
-                ))}
-              </datalist>
-            </div>
+        <SectionHeader eyebrow="Being tracked" title="Tracks" />
+        {tracks.length > 0 && (
+          <div className="mb-4">
+            <TrackSwitcher tracks={tracks} selectedId={selectedId} onSelect={setSelectedId} />
           </div>
-          <label className="flex items-center gap-2 text-xs text-slate-400">
+        )}
+        <form onSubmit={createTrack} className="card p-4 space-y-3">
+          <p className="text-xs text-slate-500">Track a new streamer/level (doesn't replace existing tracks)</p>
+          <div className="grid sm:grid-cols-3 gap-3">
             <input
-              type="checkbox"
-              checked={keepAttempts}
-              onChange={(e) => setKeepAttempts(e.target.checked)}
+              value={newStreamer}
+              onChange={(e) => setNewStreamer(e.target.value)}
+              placeholder="Streamer (e.g. Zoink)"
+              className="w-full bg-ink-900 border border-white/10 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-signal-amber/60"
             />
-            Keep existing attempts (uncheck to start a fresh session)
-          </label>
-          <button
-            type="submit"
-            className="px-4 py-2 text-sm font-semibold uppercase tracking-wide bg-ink-800 border border-white/10 text-slate-100 hover:border-signal-amber/60 transition-colors"
-          >
-            Save session
-          </button>
-        </form>
-      </section>
-
-      <section>
-        <SectionHeader eyebrow="Log a death" title="New attempt" />
-        <form onSubmit={logAttempt} className="card p-5 space-y-4">
-          <div className="text-center">
-            <span className="font-display text-5xl font-bold text-signal-amber">
-              {percent || "0"}
-            </span>
-            <span className="font-display text-3xl font-bold text-signal-amber">%</span>
+            <input
+              value={newLevel}
+              onChange={(e) => setNewLevel(e.target.value)}
+              placeholder="Level (e.g. Heliopolis)"
+              className="w-full bg-ink-900 border border-white/10 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-signal-amber/60"
+            />
+            <input
+              value={newStreamNumber}
+              onChange={(e) => setNewStreamNumber(e.target.value)}
+              placeholder="Stream # (optional)"
+              inputMode="numeric"
+              className="w-full bg-ink-900 border border-white/10 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-signal-amber/60"
+            />
           </div>
-          <Numpad value={percent} onChange={setPercent} mode="decimal" maxLength={6} />
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Notes (optional) - e.g. died on final jump, chat went wild…"
-            rows={2}
-            className="w-full bg-ink-900 border border-white/10 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-signal-amber/60 resize-none"
-          />
           <button
             type="submit"
-            disabled={!percent}
-            className="w-full px-4 py-2.5 text-sm font-semibold uppercase tracking-wide bg-signal-amber text-ink-950 hover:bg-signal-amber/90 disabled:opacity-40 transition-colors"
+            disabled={!newStreamer || !newLevel}
+            className="px-4 py-2 text-sm font-semibold uppercase tracking-wide bg-ink-800 border border-white/10 text-slate-100 hover:border-signal-amber/60 disabled:opacity-40 transition-colors"
           >
-            Log attempt
+            + New track
           </button>
         </form>
-        {status && <p className="text-xs text-slate-500 mt-2">{status}</p>}
       </section>
 
-      <section>
-        <SectionHeader eyebrow={`${live.data?.streamer ?? ""} × ${live.data?.level ?? ""}`} title="Logged attempts" />
-        <div className="space-y-2">
-          {live.data?.attempts?.length === 0 && (
-            <p className="text-sm text-slate-500">No attempts logged yet.</p>
-          )}
-          {live.data?.attempts?.map((a) => (
-            <div key={a.id} className="card flex items-center gap-3 p-3">
-              <span className="font-mono font-semibold text-white w-16 shrink-0">{a.percent}%</span>
-              <span className="text-sm text-slate-400 flex-1 truncate">{a.note || "—"}</span>
-              <span className="text-xs text-slate-600 shrink-0">
-                {a.createdAt ? timeAgo(Math.floor(new Date(a.createdAt).getTime() / 1000)) : ""}
-              </span>
+      {selectedTrack && (
+        <>
+          <section>
+            <SectionHeader
+              eyebrow="Log a death"
+              title={`${selectedTrack.streamer} × ${selectedTrack.level}`}
+              action={
+                <button onClick={removeTrack} className="text-xs text-slate-600 hover:text-signal-red">
+                  delete track
+                </button>
+              }
+            />
+            <form onSubmit={saveStreamNumber} className="flex items-center gap-2 mb-4">
+              <label className="text-xs text-slate-500 shrink-0">Stream #</label>
+              <input
+                value={streamNumberEdit}
+                onChange={(e) => setStreamNumberEdit(e.target.value)}
+                placeholder="e.g. 47"
+                inputMode="numeric"
+                className="w-24 bg-ink-900 border border-white/10 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-signal-amber/60"
+              />
               <button
-                onClick={() => removeAttempt(a.id)}
-                className="text-xs text-slate-600 hover:text-signal-red shrink-0"
+                type="submit"
+                className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide bg-ink-800 border border-white/10 text-slate-300 hover:border-signal-amber/60 transition-colors"
               >
-                delete
+                Save
               </button>
+            </form>
+            <form onSubmit={logAttempt} className="card p-5 space-y-4">
+              <Numpad value={percent} onChange={setPercent} mode="decimal" maxLength={6} />
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Notes (optional) - e.g. died on final jump, chat went wild…"
+                rows={2}
+                className="w-full bg-ink-900 border border-white/10 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-signal-amber/60 resize-none"
+              />
+              <button
+                type="submit"
+                disabled={!percent}
+                className="w-full px-4 py-2.5 text-sm font-semibold uppercase tracking-wide bg-signal-amber text-ink-950 hover:bg-signal-amber/90 disabled:opacity-40 transition-colors"
+              >
+                Log attempt
+              </button>
+            </form>
+            {status && <p className="text-xs text-slate-500 mt-2">{status}</p>}
+          </section>
+
+          <section>
+            <SectionHeader title="Logged attempts" />
+            <div className="space-y-2">
+              {selectedTrack.attempts.length === 0 && (
+                <p className="text-sm text-slate-500">No attempts logged yet.</p>
+              )}
+              {selectedTrack.attempts.map((a) => (
+                <div key={a.id} className="card flex items-center gap-3 p-3">
+                  <span className="font-mono font-semibold text-white w-16 shrink-0">{a.percent}%</span>
+                  <span className="text-sm text-slate-400 flex-1 truncate">{a.note || "—"}</span>
+                  <span className="text-xs text-slate-600 shrink-0">
+                    {a.createdAt ? timeAgo(Math.floor(new Date(a.createdAt).getTime() / 1000)) : ""}
+                  </span>
+                  <button
+                    onClick={() => removeAttempt(a.id)}
+                    className="text-xs text-slate-600 hover:text-signal-red shrink-0"
+                  >
+                    delete
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </section>
+          </section>
+        </>
+      )}
     </div>
   );
 }
