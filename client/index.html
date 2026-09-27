@@ -2,12 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>GDNews</title>
     <meta
       name="description"
       content="Geometry Dash news: live creators, the top 10 demonlist, patch notes, daily/weekly levels, leaks and upcoming levels."
     />
+    <!-- Lets iOS run this as a chrome-less "app" when added to the Home Screen -
+         Safari has no API for a page to go fullscreen itself, so this is the
+         only real route to a true full-screen view on iPhone/iPad. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

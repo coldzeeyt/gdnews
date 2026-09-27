@@ -30,10 +30,16 @@ function AttemptRow({ a }) {
   );
 }
 
+function requestFullscreenCompat(el) {
+  const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.webkitEnterFullscreen;
+  return fn ? fn.call(el) : Promise.reject(new Error("unsupported"));
+}
+
 export default function LiveFullscreen({ track }) {
   const rootRef = useRef(null);
   const isMobile = useIsMobile();
   const [showPastStreams, setShowPastStreams] = useState(false);
+  const [fsHint, setFsHint] = useState(false);
 
   const latest = track.attempts[0];
   const currentStreamNumber = track.streamNumber || null;
@@ -46,27 +52,40 @@ export default function LiveFullscreen({ track }) {
   );
 
   async function goFullscreen() {
+    if (!rootRef.current) return;
     try {
-      await rootRef.current?.requestFullscreen?.();
+      await requestFullscreenCompat(rootRef.current);
     } catch {
-      // ignored - not every browser supports it
+      // No Fullscreen API here - notably iOS Safari, which has none for
+      // regular elements. Say so instead of leaving the button looking dead.
+      setFsHint(true);
+      setTimeout(() => setFsHint(false), 6000);
+      return;
     }
     try {
       await screen.orientation?.lock?.("landscape");
     } catch {
-      // ignored - iOS Safari in particular has no API for this
+      // best-effort only - many browsers restrict this even in fullscreen
     }
   }
 
   return (
     <div ref={rootRef} className="bg-ink-950">
       <div className="min-h-[80vh] flex flex-col items-center justify-center text-center px-4 relative">
-        <button
-          onClick={goFullscreen}
-          className="absolute top-4 right-4 text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-signal-amber"
-        >
-          Full screen ⤢
-        </button>
+        <div className="absolute top-4 right-4 text-right">
+          <button
+            onClick={goFullscreen}
+            className="text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-signal-amber"
+          >
+            Full screen ⤢
+          </button>
+          {fsHint && (
+            <p className="text-xs text-slate-500 normal-case mt-2 max-w-[220px]">
+              Safari on iPhone/iPad can't fullscreen a page - tap Share → Add to Home Screen
+              and open it from there for a full-screen, app-like view.
+            </p>
+          )}
+        </div>
 
         <p className="text-sm sm:text-base font-semibold uppercase tracking-widest text-slate-500 mb-3">
           {track.streamer} × {track.level}
