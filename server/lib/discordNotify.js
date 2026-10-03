@@ -17,7 +17,7 @@ function isFromZero(attempt) {
   return !attempt.display;
 }
 
-async function pingWebhook(percent, previousBest) {
+async function pingWebhook(label, percentText, previousBest) {
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
   if (!webhookUrl) return;
 
@@ -25,8 +25,8 @@ async function pingWebhook(percent, previousBest) {
   const mention = roleId ? `<@&${roleId}>` : "@here";
   const content =
     previousBest > 0
-      ? `${mention} New best: **${percent}%** (was ${previousBest}%)`
-      : `${mention} New best: **${percent}%**`;
+      ? `${mention} ${label}: **${percentText}%** (was ${previousBest}%)`
+      : `${mention} ${label}: **${percentText}%**`;
   const allowed_mentions = roleId ? { parse: [], roles: [roleId] } : { parse: ["everyone"] };
 
   const res = await fetch(webhookUrl, {
@@ -80,7 +80,7 @@ async function sendChannelMessage(channelId, content) {
   }
 }
 
-async function notifyGuilds(track, latest, isNewBest, previousBest) {
+async function notifyGuilds(track, latest, bestHit) {
   const configs = loadGuildConfigs();
   const entries = Object.entries(configs);
   if (entries.length === 0) return;
@@ -88,8 +88,8 @@ async function notifyGuilds(track, latest, isNewBest, previousBest) {
   const label = `${track.streamer} × ${track.level}`;
   const percentText = latest.display || `${latest.percent}`;
   const everyMessage = `${label} - **${percentText}%**${latest.note ? ` - ${latest.note}` : ""}`;
-  const bestMessage = isNewBest
-    ? `${label} - New best: **${percentText}%**${previousBest > 0 ? ` (was ${previousBest}%)` : ""}`
+  const bestMessage = bestHit
+    ? `${label} - ${bestHit.label}: **${percentText}%**${bestHit.previousBest > 0 ? ` (was ${bestHit.previousBest}%)` : ""}`
     : null;
 
   for (const [guildId, config] of entries) {
@@ -103,51 +103,63 @@ async function notifyGuilds(track, latest, isNewBest, previousBest) {
   }
 }
 
+function bootstrapBests(attempts) {
+  const highest = (list) => list.reduce((max, a) => Math.max(max, a.percent), 0);
+  return {
+    nonStartpos: highest(attempts.filter(isFromZero)),
+    startpos: highest(attempts.filter((a) => !isFromZero(a))),
+  };
+}
+
 // Call this with a track right after a new attempt has been unshifted onto
-// track.attempts (so attempts[0] is the new one). Checks whether it's a new
-// best run from 0, pings the configured webhook for it, and fans the run out
-// to every guild that's opted into notifications. Never throws - a
-// notification problem must never break attempt logging.
+// track.attempts (so attempts[0] is the new one). Tracks two separate bests
+// - from 0 ("nonStartpos") and from a checkpoint ("startpos", e.g. "50-92")
+// - since they're not comparable difficulty-wise. Pings the configured
+// webhook and fans the run out to every guild that's opted into
+// notifications. Never throws - a notification problem must never break
+// attempt logging.
 export async function checkNewBest(track) {
   try {
     const latest = track.attempts[0];
     if (!latest) return;
 
     const bests = loadBests();
-    const hasSavedBest = Object.prototype.hasOwnProperty.call(bests, track.id);
-    let isNewBest = false;
-    let previousBest = null;
+    const existing = bests[track.id];
+    // Accept both "never seen this track" and the old pre-split shape
+    // (a plain number) as needing a fresh bootstrap.
+    const hasSavedBest = existing && typeof existing === "object";
+
+    let bestHit = null;
 
     if (!hasSavedBest) {
       // First time we've seen this track since this feature shipped -
-      // baseline from all current attempts (including this one) without
-      // pinging, so existing history doesn't trigger a spam ping.
-      const baseline = track.attempts
-        .filter(isFromZero)
-        .reduce((max, a) => Math.max(max, a.percent), 0);
-      bests[track.id] = baseline;
+      // baseline both categories from all current attempts (including this
+      // one) without pinging, so existing history doesn't trigger a spam ping.
+      bests[track.id] = bootstrapBests(track.attempts);
       saveBests(bests);
-    } else if (isFromZero(latest)) {
-      previousBest = bests[track.id];
+    } else {
+      const category = isFromZero(latest) ? "nonStartpos" : "startpos";
+      const previousBest = existing[category];
       if (latest.percent > previousBest) {
-        isNewBest = true;
-        bests[track.id] = latest.percent;
+        existing[category] = latest.percent;
         saveBests(bests);
-        await pingWebhook(latest.percent, previousBest);
+        const label = category === "nonStartpos" ? "New best" : "New checkpoint best";
+        bestHit = { label, previousBest };
+        await pingWebhook(label, latest.display || `${latest.percent}`, previousBest);
       }
     }
 
-    await notifyGuilds(track, latest, isNewBest, previousBest);
+    await notifyGuilds(track, latest, bestHit);
   } catch (err) {
     console.error("Discord notification failed:", err.message);
   }
 }
 
 // Called when a track's stream number changes - a new stream starts fresh,
-// so the next 0%-start run should ping as a new best even if it's lower
-// than an earlier stream's best.
+// so the next run in either category should ping as a new best even if it's
+// lower than an earlier stream's best.
 export function resetBestForNewStream(trackId) {
   const bests = loadBests();
-  bests[trackId] = 0;
+  bests[trackId] = { nonStartpos: 0, startpos: 0 };
   saveBests(bests);
 }

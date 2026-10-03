@@ -81,13 +81,22 @@ function replyNoTrack(interaction) {
 async function handleBest(interaction) {
   const track = topTrack();
   if (!track) return replyNoTrack(interaction);
-  if (!track.best) {
+  if (!track.best && !track.bestStartpos) {
     return interaction.reply(`**${track.streamer} × ${track.level}** - no attempts logged yet.`);
   }
-  await interaction.reply(
-    `**${track.streamer} × ${track.level}** - Best: **${formatPercent(track.best)}%**` +
-      (track.best.note ? ` - ${track.best.note}` : "")
-  );
+  const lines = [`**${track.streamer} × ${track.level}**`];
+  if (track.best) {
+    lines.push(
+      `Best: **${formatPercent(track.best)}%**${track.best.note ? ` - ${track.best.note}` : ""}`
+    );
+  }
+  if (track.bestStartpos) {
+    lines.push(
+      `Best from checkpoint: **${formatPercent(track.bestStartpos)}%**` +
+        (track.bestStartpos.note ? ` - ${track.bestStartpos.note}` : "")
+    );
+  }
+  await interaction.reply(lines.join("\n"));
 }
 
 async function handleCurrent(interaction) {

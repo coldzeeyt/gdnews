@@ -71,12 +71,17 @@ function save(data) {
   return data;
 }
 
+function bestOf(attempts) {
+  return attempts.reduce((max, a) => (max === null || a.percent > max.percent ? a : max), null);
+}
+
+// `best` is the best run from 0 (no `display`); `bestStartpos` is the best
+// checkpoint/startpos run (has `display`, e.g. "50-92") - kept separate
+// since they're not comparable difficulty-wise.
 function withBest(track) {
-  const best = track.attempts.reduce(
-    (max, a) => (max === null || a.percent > max.percent ? a : max),
-    null
-  );
-  return { ...track, best };
+  const best = bestOf(track.attempts.filter((a) => !a.display));
+  const bestStartpos = bestOf(track.attempts.filter((a) => a.display));
+  return { ...track, best, bestStartpos };
 }
 
 function lastActivity(track) {
