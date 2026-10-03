@@ -7,11 +7,17 @@ import {
   PermissionFlagsBits,
   ChannelType,
 } from "discord.js";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { getAllTracks } from "./liveProgress.js";
 import { cached } from "./cache.js";
 import { fetchTop10Demons } from "./pointercrate.js";
 import { fetchLiveCreators } from "./liveCreators.js";
 import { getGuildConfig, setGuildConfig, clearGuildConfig } from "./discordNotify.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const CREATORS = JSON.parse(readFileSync(path.join(__dirname, "../config/creators.json"), "utf-8"));
 
 const SITE_URL = "https://gdnews.up.railway.app";
 
@@ -22,6 +28,7 @@ const COMMANDS = [
   new SlashCommandBuilder().setName("demonlist").setDescription("Show the current top 10 demonlist."),
   new SlashCommandBuilder().setName("live").setDescription("Show which creators are live right now."),
   new SlashCommandBuilder().setName("site").setDescription("Link to the live stats page."),
+  new SlashCommandBuilder().setName("stream").setDescription("Link to the current stream."),
   new SlashCommandBuilder()
     .setName("notify-setup")
     .setDescription("Turn on live-run notifications in a channel.")
@@ -160,6 +167,32 @@ async function handleSite(interaction) {
   await interaction.reply(`${SITE_URL}/live-stats`);
 }
 
+async function handleStream(interaction) {
+  const track = topTrack();
+  if (!track) return replyNoTrack(interaction);
+
+  const creator = CREATORS.find((c) => c.displayName.toLowerCase() === track.streamer.toLowerCase());
+  if (!creator?.youtube) {
+    return interaction.reply(`No stream link on file for **${track.streamer}**.`);
+  }
+
+  await interaction.deferReply();
+  try {
+    const { creators } = await cached("live:creators", 2 * 60 * 1000, fetchLiveCreators);
+    const status = creators.find((c) => c.displayName === creator.displayName)?.youtube;
+    if (status?.live && status.watchUrl) {
+      await interaction.editReply(`🔴 **${track.streamer}** is live: ${status.watchUrl}`);
+    } else {
+      await interaction.editReply(
+        `**${track.streamer}** isn't live right now. Channel: ${status?.channelUrl ?? `https://youtube.com/${creator.youtube}`}`
+      );
+    }
+  } catch (err) {
+    await interaction.editReply(`Couldn't check live status. Channel: https://youtube.com/${creator.youtube}`);
+    throw err;
+  }
+}
+
 function requireGuild(interaction) {
   if (interaction.guildId) return true;
   interaction.reply({ content: "This only works inside a server.", ephemeral: true });
@@ -238,6 +271,7 @@ export async function startDiscordBot() {
       else if (interaction.commandName === "demonlist") await handleDemonlist(interaction);
       else if (interaction.commandName === "live") await handleLive(interaction);
       else if (interaction.commandName === "site") await handleSite(interaction);
+      else if (interaction.commandName === "stream") await handleStream(interaction);
       else if (interaction.commandName === "notify-setup") await handleNotifySetup(interaction);
       else if (interaction.commandName === "notify-off") await handleNotifyOff(interaction);
       else if (interaction.commandName === "notify-status") await handleNotifyStatus(interaction);
