@@ -19,7 +19,7 @@ function groupByStream(attempts) {
 function AttemptRow({ a }) {
   return (
     <div className="card flex items-center gap-4 p-3">
-      <span className="font-mono font-bold text-white text-base w-16 shrink-0">{a.percent}%</span>
+      <span className="font-mono font-bold text-white text-base w-16 shrink-0">{a.display || a.percent}%</span>
       <span className="text-sm text-slate-400 flex-1 truncate">{a.note || "—"}</span>
       {a.createdAt && (
         <span className="text-xs text-slate-600 shrink-0">
@@ -103,7 +103,7 @@ export default function LiveFullscreen({ track }) {
             className="font-display font-bold text-signal-amber"
             style={{ fontSize: "clamp(4.5rem, 24vw, 16rem)" }}
           >
-            {latest ? latest.percent : 0}
+            {latest ? latest.display || latest.percent : 0}
           </span>
           <span
             className="font-display font-bold text-signal-amber"

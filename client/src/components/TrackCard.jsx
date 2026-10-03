@@ -15,7 +15,7 @@ export default function TrackCard({ track }) {
 
       <div className="my-3">
         <span className="font-display text-6xl sm:text-7xl font-bold text-signal-amber">
-          {latest ? latest.percent : 0}
+          {latest ? latest.display || latest.percent : 0}
         </span>
         <span className="font-display text-3xl sm:text-4xl font-bold text-signal-amber">%</span>
       </div>
@@ -42,7 +42,7 @@ export default function TrackCard({ track }) {
         <div className="mt-4 space-y-2 text-left border-t border-white/5 pt-4">
           {past.map((a) => (
             <div key={a.id} className="flex items-center gap-4">
-              <span className="font-mono font-bold text-white text-base w-16 shrink-0">{a.percent}%</span>
+              <span className="font-mono font-bold text-white text-base w-16 shrink-0">{a.display || a.percent}%</span>
               <span className="text-sm text-slate-400 flex-1 truncate">{a.note || "—"}</span>
               {a.createdAt && (
                 <span className="text-xs text-slate-600 shrink-0">

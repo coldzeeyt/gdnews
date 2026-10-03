@@ -266,7 +266,7 @@ function Dashboard() {
               </button>
             </form>
             <form onSubmit={logAttempt} className="card p-5 space-y-4">
-              <Numpad value={percent} onChange={setPercent} mode="decimal" maxLength={6} />
+              <Numpad value={percent} onChange={setPercent} mode="decimal" maxLength={10} />
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
@@ -293,7 +293,7 @@ function Dashboard() {
               )}
               {selectedTrack.attempts.map((a) => (
                 <div key={a.id} className="card flex items-center gap-3 p-3">
-                  <span className="font-mono font-semibold text-white w-16 shrink-0">{a.percent}%</span>
+                  <span className="font-mono font-semibold text-white w-16 shrink-0">{a.display || a.percent}%</span>
                   <span className="text-sm text-slate-400 flex-1 truncate">{a.note || "—"}</span>
                   <span className="text-xs text-slate-600 shrink-0">
                     {a.createdAt ? timeAgo(Math.floor(new Date(a.createdAt).getTime() / 1000)) : ""}

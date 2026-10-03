@@ -122,13 +122,14 @@ export function updateTrack(trackId, { streamer, level, streamNumber }) {
   return withBest(track);
 }
 
-export function addAttempt(trackId, percent, note) {
+export function addAttempt(trackId, percent, note, display) {
   const data = load();
   const track = data.tracks.find((t) => t.id === trackId);
   if (!track) return null;
   track.attempts.unshift({
     id: randomUUID(),
     percent,
+    display: display || null,
     note: note || null,
     streamNumber: track.streamNumber || null,
     createdAt: new Date().toISOString(),

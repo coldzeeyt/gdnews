@@ -1,13 +1,19 @@
 import { useRef } from "react";
 import { useIsMobile } from "../lib/useIsMobile.js";
 
+// Decimal mode also allows a single hyphen, for shorthand like "50-92" -
+// started practicing from a 50% checkpoint, died at 92%.
 function sanitize(raw, mode, maxLength) {
   let cleaned =
-    mode === "decimal" ? raw.replace(/[^0-9.]/g, "") : raw.replace(/[^0-9]/g, "");
+    mode === "decimal" ? raw.replace(/[^0-9.-]/g, "") : raw.replace(/[^0-9]/g, "");
   if (mode === "decimal") {
     const firstDot = cleaned.indexOf(".");
     if (firstDot !== -1) {
       cleaned = cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, "");
+    }
+    const firstDash = cleaned.indexOf("-");
+    if (firstDash !== -1) {
+      cleaned = cleaned.slice(0, firstDash + 1) + cleaned.slice(firstDash + 1).replace(/-/g, "");
     }
   }
   return maxLength ? cleaned.slice(0, maxLength) : cleaned;
@@ -35,59 +41,34 @@ function PercentDisplay({ value }) {
   );
 }
 
-function Key({ children, onClick, disabled = false, className = "" }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`h-14 rounded text-lg font-display font-semibold bg-ink-800 border border-white/10 text-slate-100 hover:bg-ink-700 active:bg-ink-600 disabled:opacity-30 disabled:hover:bg-ink-800 transition-colors ${className}`}
-    >
-      {children}
-    </button>
-  );
-}
-
-function OnScreenKeypad({ value, onChange, mode, maxLength, onSubmit }) {
-  function press(char) {
-    if (maxLength && value.length >= maxLength) return;
-    const next = value + char;
+// Desktop/PC has a physical keyboard, so there's no point drawing a
+// clickable keypad there - just a plain text box, like any other form
+// field. Enter submits a pin the same way filling it out does.
+function TypingBox({ value, onChange, mode, maxLength, onSubmit, autoFocus }) {
+  function handleChange(e) {
+    const next = sanitize(e.target.value, mode, maxLength);
     onChange(next);
-    if (mode === "pin" && onSubmit && next.length === maxLength) onSubmit();
   }
 
-  function backspace() {
-    onChange(value.slice(0, -1));
-  }
-
-  function clear() {
-    onChange("");
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && onSubmit) onSubmit();
   }
 
   return (
-    <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
-      {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
-        <Key key={d} onClick={() => press(d)}>
-          {d}
-        </Key>
-      ))}
-
-      {mode === "decimal" ? (
-        <Key onClick={() => press(".")} disabled={value.includes(".")}>
-          .
-        </Key>
-      ) : (
-        <Key onClick={clear} className="text-signal-red" disabled={!value}>
-          C
-        </Key>
-      )}
-
-      <Key onClick={() => press("0")}>0</Key>
-
-      <Key onClick={backspace} disabled={!value}>
-        ⌫
-      </Key>
-    </div>
+    <input
+      value={value}
+      onChange={handleChange}
+      onKeyDown={handleKeyDown}
+      type="text"
+      inputMode={mode === "pin" ? "numeric" : "decimal"}
+      autoFocus={autoFocus}
+      autoComplete="off"
+      autoCorrect="off"
+      autoCapitalize="off"
+      spellCheck="false"
+      placeholder={mode === "pin" ? "Passcode" : "e.g. 92 or 50-92"}
+      className="w-full max-w-xs mx-auto block h-12 px-3 bg-ink-900 border border-white/10 text-center font-mono text-lg text-slate-100 placeholder:text-slate-600 placeholder:font-sans placeholder:text-sm focus:outline-none focus:border-signal-amber/60"
+    />
   );
 }
 
@@ -135,9 +116,11 @@ function NativeKeypadInput({ value, onChange, mode, maxLength, onSubmit, autoFoc
  * PIN entry (mode="pin") or decimal percentage entry (mode="decimal").
  * On phones/touch devices this hands off to the device's own numeric
  * keyboard (the real thing, not a redraw of it). On desktop, where there's
- * no OS keypad to defer to, it falls back to a plain on-screen keypad.
- * Purely controlled: value/onChange hold the typed string. onSubmit fires
- * automatically once a pin reaches maxLength.
+ * a physical keyboard and clicking an on-screen keypad would be silly, it's
+ * a plain typing box instead. Decimal mode also allows one hyphen, for
+ * shorthand like "50-92". Purely controlled: value/onChange hold the typed
+ * string. onSubmit fires automatically once a pin reaches maxLength (native
+ * keypad) or on Enter (typing box).
  */
 export default function Numpad({
   value,
@@ -163,12 +146,13 @@ export default function Numpad({
           autoFocus={autoFocus}
         />
       ) : (
-        <OnScreenKeypad
+        <TypingBox
           value={value}
           onChange={onChange}
           mode={mode}
           maxLength={maxLength}
           onSubmit={onSubmit}
+          autoFocus={autoFocus}
         />
       )}
     </div>

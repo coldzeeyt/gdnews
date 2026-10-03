@@ -53,11 +53,22 @@ router.delete("/tracks/:trackId", requireAdmin, (req, res) => {
 
 router.post("/tracks/:trackId/attempt", requireAdmin, (req, res) => {
   const { percent, note } = req.body || {};
-  const value = Number(percent);
+  // "50-92" shorthand: started practicing from a 50% checkpoint, died at
+  // 92%. The percent used for sorting/best-attempt is the last number;
+  // the full "50-92" text is kept as `display` so it still reads that way.
+  const raw = String(percent ?? "").trim();
+  const parts = raw.split("-").map((p) => p.trim()).filter(Boolean);
+  const value = Number(parts[parts.length - 1]);
   if (!Number.isFinite(value) || value < 0 || value > 100) {
     return res.status(400).json({ error: "percent must be a number between 0 and 100" });
   }
-  const track = addAttempt(req.params.trackId, value, note ? String(note).slice(0, 280) : null);
+  const display = parts.length > 1 ? raw : null;
+  const track = addAttempt(
+    req.params.trackId,
+    value,
+    note ? String(note).slice(0, 280) : null,
+    display
+  );
   if (!track) return res.status(404).json({ error: "Track not found" });
   res.json(track);
 });
