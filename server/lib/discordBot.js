@@ -132,6 +132,10 @@ export async function startDiscordBot() {
     if (guildId) {
       // Guild-scoped commands propagate instantly - good for a single-server bot.
       await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: COMMANDS });
+      // Global and guild commands are separate sets in Discord - clear any
+      // global ones left over from before DISCORD_GUILD_ID was set, or
+      // they'll show up as duplicates alongside the guild-scoped ones.
+      await rest.put(Routes.applicationCommands(clientId), { body: [] });
     } else {
       // Global commands can take up to an hour to show up everywhere.
       await rest.put(Routes.applicationCommands(clientId), { body: COMMANDS });
