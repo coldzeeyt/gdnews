@@ -1,8 +1,17 @@
-import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from "discord.js";
+import {
+  Client,
+  GatewayIntentBits,
+  REST,
+  Routes,
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  ChannelType,
+} from "discord.js";
 import { getAllTracks } from "./liveProgress.js";
 import { cached } from "./cache.js";
 import { fetchTop10Demons } from "./pointercrate.js";
 import { fetchLiveCreators } from "./liveCreators.js";
+import { getGuildConfig, setGuildConfig, clearGuildConfig } from "./discordNotify.js";
 
 const SITE_URL = "https://gdnews.up.railway.app";
 
@@ -13,6 +22,35 @@ const COMMANDS = [
   new SlashCommandBuilder().setName("demonlist").setDescription("Show the current top 10 demonlist."),
   new SlashCommandBuilder().setName("live").setDescription("Show which creators are live right now."),
   new SlashCommandBuilder().setName("site").setDescription("Link to the live stats page."),
+  new SlashCommandBuilder()
+    .setName("notify-setup")
+    .setDescription("Turn on live-run notifications in a channel.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+    .addChannelOption((opt) =>
+      opt
+        .setName("channel")
+        .setDescription("Channel to post updates in")
+        .addChannelTypes(ChannelType.GuildText)
+        .setRequired(true)
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("mode")
+        .setDescription("best = only new-best pings, every = every logged run")
+        .setRequired(true)
+        .addChoices(
+          { name: "Best runs only", value: "best" },
+          { name: "Every run", value: "every" }
+        )
+    ),
+  new SlashCommandBuilder()
+    .setName("notify-off")
+    .setDescription("Turn off live-run notifications for this server.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+  new SlashCommandBuilder()
+    .setName("notify-status")
+    .setDescription("Show the current notification setup for this server.")
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 ].map((c) => c.toJSON());
 
 function formatPercent(attempt) {
@@ -113,6 +151,41 @@ async function handleSite(interaction) {
   await interaction.reply(`${SITE_URL}/live-stats`);
 }
 
+function requireGuild(interaction) {
+  if (interaction.guildId) return true;
+  interaction.reply({ content: "This only works inside a server.", ephemeral: true });
+  return false;
+}
+
+async function handleNotifySetup(interaction) {
+  if (!requireGuild(interaction)) return;
+  const channel = interaction.options.getChannel("channel");
+  const mode = interaction.options.getString("mode");
+  setGuildConfig(interaction.guildId, channel.id, mode);
+  await interaction.reply(
+    `Notifications set to **${mode === "every" ? "every run" : "best runs only"}** in <#${channel.id}>. ` +
+      "Make sure the bot can send messages there."
+  );
+}
+
+async function handleNotifyOff(interaction) {
+  if (!requireGuild(interaction)) return;
+  clearGuildConfig(interaction.guildId);
+  await interaction.reply("Notifications turned off for this server.");
+}
+
+async function handleNotifyStatus(interaction) {
+  if (!requireGuild(interaction)) return;
+  const config = getGuildConfig(interaction.guildId);
+  if (!config) {
+    return interaction.reply({ content: "No notifications configured for this server.", ephemeral: true });
+  }
+  await interaction.reply({
+    content: `Mode: **${config.mode === "every" ? "every run" : "best runs only"}** in <#${config.channelId}>.`,
+    ephemeral: true,
+  });
+}
+
 // Optional: only starts if DISCORD_BOT_TOKEN is set. A missing/invalid
 // token, failed command registration, or gateway error must never crash
 // the main server - this is an add-on, not a dependency.
@@ -156,6 +229,9 @@ export async function startDiscordBot() {
       else if (interaction.commandName === "demonlist") await handleDemonlist(interaction);
       else if (interaction.commandName === "live") await handleLive(interaction);
       else if (interaction.commandName === "site") await handleSite(interaction);
+      else if (interaction.commandName === "notify-setup") await handleNotifySetup(interaction);
+      else if (interaction.commandName === "notify-off") await handleNotifyOff(interaction);
+      else if (interaction.commandName === "notify-status") await handleNotifyStatus(interaction);
     } catch (err) {
       console.error(`Discord command /${interaction.commandName} failed:`, err.message);
       if (!interaction.replied) {
