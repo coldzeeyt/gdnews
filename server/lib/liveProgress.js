@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { readStore, writeStore } from "./store.js";
+import { checkNewBest, resetBestForNewStream } from "./discordNotify.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const STORE_NAME = "live-progress";
@@ -117,7 +118,15 @@ export function updateTrack(trackId, { streamer, level, streamNumber }) {
   if (!track) return null;
   if (streamer !== undefined) track.streamer = streamer;
   if (level !== undefined) track.level = level;
-  if (streamNumber !== undefined) track.streamNumber = streamNumber || null;
+  if (streamNumber !== undefined) {
+    const nextStreamNumber = streamNumber || null;
+    if (nextStreamNumber !== track.streamNumber) {
+      // A new stream started - the next 0%-start run should ping as a new
+      // best even if an earlier stream already went higher.
+      resetBestForNewStream(track.id);
+    }
+    track.streamNumber = nextStreamNumber;
+  }
   save(data);
   return withBest(track);
 }
@@ -135,6 +144,9 @@ export function addAttempt(trackId, percent, note, display) {
     createdAt: new Date().toISOString(),
   });
   save(data);
+  // Fire-and-forget: checkNewBest never throws (it catches internally), so
+  // this can't break attempt logging even if Discord is unreachable.
+  checkNewBest(track);
   return withBest(track);
 }
 
