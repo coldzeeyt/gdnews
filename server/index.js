@@ -19,6 +19,7 @@ import searchRouter from "./routes/search.js";
 import playersRouter from "./routes/players.js";
 import adminRouter from "./routes/admin.js";
 import liveProgressRouter from "./routes/liveProgress.js";
+import { startDiscordBot } from "./lib/discordBot.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CLIENT_DIST = path.join(__dirname, "../client/dist");
@@ -67,4 +68,11 @@ app.get("*", (req, res, next) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`gdnews server listening on :${PORT}`);
+});
+
+// Optional - no-ops entirely if DISCORD_BOT_TOKEN isn't set. Runs alongside
+// the HTTP server in this same process; failures here are logged, never
+// fatal to the web server.
+startDiscordBot().catch((err) => {
+  console.error("Discord bot failed to start:", err.message);
 });
