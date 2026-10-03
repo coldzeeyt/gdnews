@@ -1,9 +1,18 @@
 import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from "discord.js";
 import { getAllTracks } from "./liveProgress.js";
+import { cached } from "./cache.js";
+import { fetchTop10Demons } from "./pointercrate.js";
+import { fetchLiveCreators } from "./liveCreators.js";
+
+const SITE_URL = "https://gdnews.up.railway.app";
 
 const COMMANDS = [
   new SlashCommandBuilder().setName("best").setDescription("Show the best run so far."),
   new SlashCommandBuilder().setName("current").setDescription("Show the most recent attempt."),
+  new SlashCommandBuilder().setName("history").setDescription("Show the last few attempts."),
+  new SlashCommandBuilder().setName("demonlist").setDescription("Show the current top 10 demonlist."),
+  new SlashCommandBuilder().setName("live").setDescription("Show which creators are live right now."),
+  new SlashCommandBuilder().setName("site").setDescription("Link to the live stats page."),
 ].map((c) => c.toJSON());
 
 function formatPercent(attempt) {
@@ -57,6 +66,53 @@ async function handleCurrent(interaction) {
   );
 }
 
+async function handleHistory(interaction) {
+  const track = topTrack();
+  if (!track) return replyNoTrack(interaction);
+  if (track.attempts.length === 0) {
+    return interaction.reply(`**${track.streamer} × ${track.level}** - no attempts logged yet.`);
+  }
+  const lines = track.attempts
+    .slice(0, 5)
+    .map((a) => `**${formatPercent(a)}%**${a.note ? ` - ${a.note}` : ""} (${timeAgo(a.createdAt)})`);
+  await interaction.reply(`**${track.streamer} × ${track.level}** - last ${lines.length}:\n${lines.join("\n")}`);
+}
+
+async function handleDemonlist(interaction) {
+  await interaction.deferReply();
+  try {
+    const demons = await cached("demonlist:top10", 30 * 60 * 1000, fetchTop10Demons);
+    const lines = demons.map(
+      (d) => `${d.position}. **${d.name}** by ${d.publisher} - verified by ${d.verifier}`
+    );
+    await interaction.editReply(lines.join("\n"));
+  } catch (err) {
+    await interaction.editReply("Couldn't load the demonlist right now.");
+    throw err;
+  }
+}
+
+async function handleLive(interaction) {
+  await interaction.deferReply();
+  try {
+    const { creators } = await cached("live:creators", 2 * 60 * 1000, fetchLiveCreators);
+    const live = creators.filter((c) => c.live);
+    if (live.length === 0) {
+      await interaction.editReply("No pinned creators are live right now.");
+      return;
+    }
+    const lines = live.map((c) => `🔴 **${c.displayName}** is live`);
+    await interaction.editReply(lines.join("\n"));
+  } catch (err) {
+    await interaction.editReply("Couldn't load live status right now.");
+    throw err;
+  }
+}
+
+async function handleSite(interaction) {
+  await interaction.reply(`${SITE_URL}/live-stats`);
+}
+
 // Optional: only starts if DISCORD_BOT_TOKEN is set. A missing/invalid
 // token, failed command registration, or gateway error must never crash
 // the main server - this is an add-on, not a dependency.
@@ -92,6 +148,10 @@ export async function startDiscordBot() {
     try {
       if (interaction.commandName === "best") await handleBest(interaction);
       else if (interaction.commandName === "current") await handleCurrent(interaction);
+      else if (interaction.commandName === "history") await handleHistory(interaction);
+      else if (interaction.commandName === "demonlist") await handleDemonlist(interaction);
+      else if (interaction.commandName === "live") await handleLive(interaction);
+      else if (interaction.commandName === "site") await handleSite(interaction);
     } catch (err) {
       console.error(`Discord command /${interaction.commandName} failed:`, err.message);
       if (!interaction.replied) {
