@@ -86,28 +86,49 @@ function NativeKeypadInput({ value, onChange, mode, maxLength, onSubmit, autoFoc
     if (mode === "pin" && onSubmit && next.length === maxLength) onSubmit();
   }
 
+  // The OS's decimal keypad has no "-" key at all (it's just digits + a
+  // dot), so there's no way to type one through the native keyboard on
+  // mobile - this button inserts it directly instead.
+  function insertHyphen() {
+    ref.current?.focus();
+    if (value.includes("-")) return;
+    onChange(sanitize(value + "-", mode, maxLength));
+  }
+
   return (
-    <div className="relative -mt-2 mb-2">
-      <input
-        ref={ref}
-        value={value}
-        onChange={handleChange}
-        type={mode === "pin" ? "tel" : "text"}
-        inputMode={mode === "pin" ? "tel" : "decimal"}
-        autoFocus={autoFocus}
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="off"
-        spellCheck="false"
-        className="absolute inset-0 h-14 w-full opacity-0 cursor-pointer"
-      />
-      <button
-        type="button"
-        onClick={() => ref.current?.focus()}
-        className="w-full h-14 border border-white/10 bg-ink-900 text-sm text-slate-400 hover:border-signal-amber/40 transition-colors"
-      >
-        Tap to type
-      </button>
+    <div>
+      <div className="relative -mt-2 mb-2">
+        <input
+          ref={ref}
+          value={value}
+          onChange={handleChange}
+          type={mode === "pin" ? "tel" : "text"}
+          inputMode={mode === "pin" ? "tel" : "decimal"}
+          autoFocus={autoFocus}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck="false"
+          className="absolute inset-0 h-14 w-full opacity-0 cursor-pointer"
+        />
+        <button
+          type="button"
+          onClick={() => ref.current?.focus()}
+          className="w-full h-14 border border-white/10 bg-ink-900 text-sm text-slate-400 hover:border-signal-amber/40 transition-colors"
+        >
+          Tap to type
+        </button>
+      </div>
+      {mode === "decimal" && (
+        <button
+          type="button"
+          onClick={insertHyphen}
+          disabled={value.includes("-")}
+          className="w-full h-10 border border-white/10 bg-ink-900 text-xs text-slate-500 hover:border-signal-amber/40 disabled:opacity-30 transition-colors"
+        >
+          Insert "-" for startpos (e.g. 50-92)
+        </button>
+      )}
     </div>
   );
 }
